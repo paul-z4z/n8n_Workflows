@@ -1,0 +1,160 @@
+{
+  "name": "Calendars 2",
+  "nodes": [
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "9397417@gmail.com",
+          "mode": "list"
+        },
+        "start": "={{ $('Google Calendar Trigger').item.json.start.dateTime }}",
+        "end": "={{ $('Google Calendar Trigger').item.json.end.dateTime }}",
+        "additionalFields": {
+          "summary": "=PLACEHOLDER FOR \"{{ $('Google Calendar Trigger').item.json.organizer.email }} {{ $('Google Calendar Trigger').item.json.summary }}\""
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        -40
+      ],
+      "id": "c74f7023-64fa-4461-afa4-9d541a5084b9",
+      "name": "Create Copy in Main Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "aDwq7ejeWlrQDsPP",
+          "name": "GCalendar 939 "
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "calendarId": {
+          "__rl": true,
+          "value": "lpd2000@gmail.com",
+          "mode": "list",
+          "cachedResultName": "lpd2000@gmail.com"
+        },
+        "triggerOn": "eventCreated",
+        "options": {
+          "matchTerm": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTrigger",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        60
+      ],
+      "id": "845a468f-28f2-4937-9859-2c3277dc7f20",
+      "name": "Google Calendar Trigger",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Sq8wGG5gE9O2UMLq",
+          "name": "Google Calendar lpd2000"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        240,
+        160
+      ],
+      "id": "fca033bd-ea3c-4ac2-9e40-53ee53ba408a",
+      "name": "Do Nothing1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "31f37451-9f49-41c8-bf80-e8722fafe7ba",
+              "leftValue": "={{ $json.start.dateTime }}",
+              "rightValue": "2025-06-26T00:00:00",
+              "operator": {
+                "type": "dateTime",
+                "operation": "afterOrEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        20,
+        60
+      ],
+      "id": "0b33eeda-18aa-4a2e-9eb0-e1c605962d72",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Create Copy in Main Calendar": {
+      "main": [
+        []
+      ]
+    },
+    "Google Calendar Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create Copy in Main Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Do Nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9d25576c-7a25-4b5b-bd98-90465d643688",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ac78eb455c750b1b7c57e0f2a75aeab7ad15e4f972ff51de910406db581eb0b4"
+  },
+  "id": "wt4Hy5RfAQnt3V18",
+  "tags": []
+}
