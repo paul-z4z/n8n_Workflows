@@ -1,0 +1,112 @@
+{
+  "id": "7eKv10I9aF930SlC",
+  "name": "CYBX test",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "CYBX Customer db \nThe workflow is designed to work with customer lists, summarize \ninformation, structure information, and retrieve missing details from the internet. \n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "41514cfc-3210-4372-8dc1-2851c60ad9c8",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "filePath": "/files/File1.xlsx"
+      },
+      "id": "b61e03cb-faa6-43d8-90fd-3b5065818b0c",
+      "name": "Read File1 (XLSX)",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        512,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "6ff18a1a-cb23-4c82-b166-19a52ff67b24",
+      "name": "SplitInBatches (1 company)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        576,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "\nconst input = $json;\nconst file1Data = $items(\"Read File1 (XLSX)\")[0].json;\nconst companyNameToMatch = input.company;\n\nfunction normalize(str) {\n  return str.toLowerCase().replace(/[^a-z0-9]/g, '');\n}\n\nfunction getSimilarity(a, b) {\n  return a === b ? 1 : 0; // Replace with real fuzzy match logic\n}\n\nlet bestScore = 0;\nlet bestMatch = null;\n\nfor (const row of file1Data) {\n  const score = getSimilarity(normalize(companyNameToMatch), normalize(row.company));\n  if (score > bestScore) {\n    bestScore = score;\n    bestMatch = row;\n  }\n}\n\nreturn bestMatch ? [{ json: { ...input, ...bestMatch, matchScore: bestScore } }] : [{ json: { ...input, matchScore: 0 } }];\n                "
+      },
+      "id": "07538636-d5cb-4cc4-b68b-fbcc14c87d28",
+      "name": "Fuzzy Match from File1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        768,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "range": "Sheet1!A1",
+        "options": {}
+      },
+      "id": "0d76e004-1aee-442b-888d-174e352a4107",
+      "name": "Append to File3",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        976,
+        224
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        144,
+        224
+      ],
+      "id": "57f3f477-e358-42bf-944e-4bd0748698a0",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sheetId": "13xVeTDk2RJQzA2T-MGcpldtxF10AzzrMO3AbPUYG9UA",
+        "options": {}
+      },
+      "id": "0be12481-545c-45bc-9434-2734058b16ca",
+      "name": "Read File2 Behavirial (Google Sheet)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        368,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        368
+      ],
+      "id": "302e444c-8eee-4b44-b9b0-fbe21cd7434f",
+      "name": "Code"
+    }
+  ]
+}
