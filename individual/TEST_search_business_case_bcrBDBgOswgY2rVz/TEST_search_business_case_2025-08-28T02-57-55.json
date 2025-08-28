@@ -1,0 +1,95 @@
+{
+  "name": "TEST_search business case",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c6174e78-4e5f-4a03-87b0-e57125f85c26",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### Role: Business Case Researcher and Draft Writer\n\n#### Objective:\nYour task is to explore the provided list of links, select one compelling business case that demonstrates the successful application of AI or innovative technology in a business setting, and draft a detailed business case report. This report should be suitable for sharing with an audience interested in practical AI applications and business process improvements.\n\n#### Links for Exploration:\n1. [Microsoft AI Customer Stories](https://www.microsoft.com/en-us/ai/ai-customer-stories)\n2. [Microsoft Customer Stories](https://www.microsoft.com/en-us/customers)\n3. [Salesforce Customer Success Stories](https://www.salesforce.com/news/stories/agentforce-customer-success-stories/)\n4. [Google Cloud AI Stories](https://cloud.google.com/ai/generative-ai/stories)\n5. [AWS Case Studies](https://aws.amazon.com/solutions/case-studies/)\n6. [HubSpot Small Business Case Studies](https://www.hubspot.com/case-studies/tag/small-business)\n7. [Zapier Customer Stories](https://zapier.com/customer-stories)\n8. [Intercom Customer Stories](https://www.intercom.com/customers)\n9. [Freshworks Case Studies](https://www.freshworks.com/resources/case-studies/)\n10. [Zoho CRM SMB Customers](https://www.zoho.com/crm/customers/smb.html)\n11. [Shopify Case Studies](https://www.shopify.com/case-studies)\n12. [Gorgias Customers](https://www.gorgias.com/customers)\n13. [Klaviyo Customer Story (Example Case)](https://www.klaviyo.com/blog/svenfish-customer-story)\n14. [BDC Canadian SMEs Using AI](https://www.bdc.ca/en/articles-tools/technology/free-resources/5-canadian-smes-using-ai-examples)\n15. [NRC AI-Infused Products for Canadian SMEs](https://nrc.canada.ca/en/stories/ai-infused-products-support-canadian-smes-overcome-global-competitors)\n16. [US Chamber AI Use Cases in B2B](https://labs.uschamber.ai/ai-use-cases-b2b)\n17. [Business Insider on Generative AI in Small Businesses](https://www.businessinsider.com/guides/tech/how-small-businesses-are-using-generative-ai)\n18. [AWS Blog on Generative AI for Small Businesses](https://aws.amazon.com/blogs/smb/exploring-practical-use-cases-for-generative-ai-in-small-businesses/)\n19. [Google Workspace AI for Small Business](https://workspace.google.com/resources/ai-for-small-business/)\n\n#### Key Requirements:\n- **Selection**: Choose a business case that is particularly relevant and impactful for SMBs or SMEs.\n- **Detail and Clarity**: Provide a comprehensive overview of the business case, including the problem addressed, the solution implemented, and the outcomes achieved.\n- **Engagement**: Write in a clear, engaging manner that highlights the significance of the case and its broader implications for business innovation.\n- **Format**: Structure the report with clear sections such as Introduction, Challenge, Solution, Results, and Conclusion.\n\n#### Creative Directions:\n- Focus on cases that showcase innovative uses of AI or technology in business processes.\n- Highlight any unique challenges faced and how they were overcome.\n- Discuss the broader impact of the solution on the business and industry.\n\n### Prompt Rationale:\nThis prompt is designed to guide the AI-agent in selecting and drafting a business case that not only informs but also inspires the audience by showcasing real-world applications of AI and technology in business. By emphasizing clarity, engagement, and relevance, the prompt ensures the creation of a detailed and compelling business case report.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "5e122f12-4950-4a22-8ba5-51423faf3043",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        288,
+        208
+      ],
+      "id": "6fa206bf-32b5-4c28-bbc8-f37beac0bece",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-08-20T19:13:33.733Z",
+  "updatedAt": "2025-08-22T01:49:06.265Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "3554d1ca-4692-4c5e-81b8-8a6c9ddd74b4",
+  "triggerCount": 0,
+  "id": "bcrBDBgOswgY2rVz",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}
