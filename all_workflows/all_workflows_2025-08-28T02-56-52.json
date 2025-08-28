@@ -1,0 +1,3091 @@
+[
+  {
+    "name": "BCKP workflows n8n to GitHub",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT *\nFROM workflow_entity\nWHERE name NOT ILIKE '%backup%'\nORDER BY id;",
+          "additionalFields": {}
+        },
+        "name": "Get Workflows from DB",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 1,
+        "position": [
+          -432,
+          224
+        ],
+        "id": "619dae1f-ee40-4904-97a5-cad13c8779db",
+        "credentials": {
+          "postgres": {
+            "id": "2xkaCrgCVOfCETb3",
+            "name": "PostgreSQL credential n8n_database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "functionCode": "const workflows = items.map(item => item.json);\nconst timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);\n\nconst files = workflows.flatMap(workflow => {\n  const cleanName = workflow.name.replace(/[^a-zA-Z0-9]/g, '_');\n  const workflowId = workflow.id;\n  const workflowJson = JSON.stringify(workflow, null, 2);\n\n  return [\n    {\n      path: `individual/${cleanName}_${workflowId}/${cleanName}_${timestamp}.json`,\n      content: Buffer.from(workflowJson).toString('base64'),\n      message: `Backup ${cleanName} (${workflowId}) at ${timestamp}`\n    },\n    {\n      path: `individual/${cleanName}_${workflowId}/latest.json`,\n      content: Buffer.from(workflowJson).toString('base64'),\n      message: `Latest backup for ${cleanName} (${workflowId})`\n    }\n  ];\n});\n\n// Add combined file\nconst allWorkflowsJson = JSON.stringify(workflows, null, 2);\nfiles.push({\n  path: `all_workflows/all_workflows_${timestamp}.json`,\n  content: Buffer.from(allWorkflowsJson).toString('base64'),\n  message: `Full backup of all workflows at ${timestamp}`\n});\nfiles.push({\n  path: `all_workflows/latest.json`,\n  content: Buffer.from(allWorkflowsJson).toString('base64'),\n  message: `Latest full backup of all workflows`\n});\n\nreturn files.map(file => ({ json: file }));"
+        },
+        "name": "Generate File Paths",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [
+          -176,
+          224
+        ],
+        "id": "30ec09ef-33ca-4e86-b781-59b499177267"
+      },
+      {
+        "parameters": {
+          "batchSize": 1,
+          "options": {}
+        },
+        "name": "Split In Batches",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 1,
+        "position": [
+          -160,
+          -48
+        ],
+        "id": "97f37983-6fa4-4273-8021-db32637f283a"
+      },
+      {
+        "parameters": {
+          "resource": "file",
+          "owner": {
+            "__rl": true,
+            "value": "paul-z4z",
+            "mode": "name"
+          },
+          "repository": {
+            "__rl": true,
+            "value": "n8n_Workflows",
+            "mode": "name"
+          },
+          "filePath": "={{ $json.path }}",
+          "fileContent": "={{ $json.content }}",
+          "commitMessage": "={{ $json.message }}"
+        },
+        "name": "Upload to GitHub",
+        "type": "n8n-nodes-base.github",
+        "typeVersion": 1,
+        "position": [
+          80,
+          224
+        ],
+        "id": "e14e803b-841e-460b-b477-7a4bbd448d3b",
+        "webhookId": "09d821d4-6a0a-4991-be00-6a2ec5dff456",
+        "credentials": {
+          "githubApi": {
+            "id": "9RWBslDcc6pPEYjG",
+            "name": "GitHub backup"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -688,
+          176
+        ],
+        "id": "eba9a2ca-5932-43d9-a94e-c8bd45c6dbd8",
+        "name": "When clicking ‘Execute workflow’"
+      }
+    ],
+    "connections": {
+      "Get Workflows from DB": {
+        "main": [
+          [
+            {
+              "node": "Generate File Paths",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate File Paths": {
+        "main": [
+          [
+            {
+              "node": "Upload to GitHub",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split In Batches": {
+        "main": [
+          []
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Get Workflows from DB",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload to GitHub": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "createdAt": "2025-08-26T17:42:18.102Z",
+    "updatedAt": "2025-08-28T02:34:08.782Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "versionId": "be4023cc-faaa-41f8-9efb-4f0adb6a272c",
+    "triggerCount": 0,
+    "id": "4PfmBxWJsJcMqQ9F",
+    "meta": null,
+    "parentFolderId": null,
+    "isArchived": false
+  },
+  {
+    "name": "CYBX test",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {
+          "content": "CYBX Customer db \nThe workflow is designed to work with customer lists, summarize \ninformation, structure information, and retrieve missing details from the internet. \n"
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          0,
+          0
+        ],
+        "typeVersion": 1,
+        "id": "41514cfc-3210-4372-8dc1-2851c60ad9c8",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "filePath": "/files/File1.xlsx"
+        },
+        "id": "b61e03cb-faa6-43d8-90fd-3b5065818b0c",
+        "name": "Read File1 (XLSX)",
+        "type": "n8n-nodes-base.readBinaryFile",
+        "typeVersion": 1,
+        "position": [
+          512,
+          480
+        ]
+      },
+      {
+        "parameters": {
+          "batchSize": 1,
+          "options": {}
+        },
+        "id": "6ff18a1a-cb23-4c82-b166-19a52ff67b24",
+        "name": "SplitInBatches (1 company)",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 1,
+        "position": [
+          576,
+          224
+        ]
+      },
+      {
+        "parameters": {
+          "functionCode": "\nconst input = $json;\nconst file1Data = $items(\"Read File1 (XLSX)\")[0].json;\nconst companyNameToMatch = input.company;\n\nfunction normalize(str) {\n  return str.toLowerCase().replace(/[^a-z0-9]/g, '');\n}\n\nfunction getSimilarity(a, b) {\n  return a === b ? 1 : 0; // Replace with real fuzzy match logic\n}\n\nlet bestScore = 0;\nlet bestMatch = null;\n\nfor (const row of file1Data) {\n  const score = getSimilarity(normalize(companyNameToMatch), normalize(row.company));\n  if (score > bestScore) {\n    bestScore = score;\n    bestMatch = row;\n  }\n}\n\nreturn bestMatch ? [{ json: { ...input, ...bestMatch, matchScore: bestScore } }] : [{ json: { ...input, matchScore: 0 } }];\n                "
+        },
+        "id": "07538636-d5cb-4cc4-b68b-fbcc14c87d28",
+        "name": "Fuzzy Match from File1",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [
+          768,
+          224
+        ]
+      },
+      {
+        "parameters": {
+          "range": "Sheet1!A1",
+          "options": {}
+        },
+        "id": "0d76e004-1aee-442b-888d-174e352a4107",
+        "name": "Append to File3",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 1,
+        "position": [
+          976,
+          224
+        ]
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          144,
+          224
+        ],
+        "id": "57f3f477-e358-42bf-944e-4bd0748698a0",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "authentication": "oAuth2",
+          "sheetId": "13xVeTDk2RJQzA2T-MGcpldtxF10AzzrMO3AbPUYG9UA",
+          "options": {}
+        },
+        "id": "0be12481-545c-45bc-9434-2734058b16ca",
+        "name": "Read File2 Behavirial (Google Sheet)",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 1,
+        "position": [
+          368,
+          224
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          368
+        ],
+        "id": "302e444c-8eee-4b44-b9b0-fbe21cd7434f",
+        "name": "Code"
+      }
+    ],
+    "connections": {
+      "SplitInBatches (1 company)": {
+        "main": [
+          [
+            {
+              "node": "Fuzzy Match from File1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fuzzy Match from File1": {
+        "main": [
+          [
+            {
+              "node": "Append to File3",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Code",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Read File2 Behavirial (Google Sheet)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read File2 Behavirial (Google Sheet)": {
+        "main": [
+          [
+            {
+              "node": "SplitInBatches (1 company)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "createdAt": "2025-08-09T23:27:34.772Z",
+    "updatedAt": "2025-08-28T02:35:36.618Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "versionId": "0f222b4c-f01a-4250-a01e-81221bc4b052",
+    "triggerCount": 0,
+    "id": "7eKv10I9aF930SlC",
+    "meta": null,
+    "parentFolderId": "WxkLNiYI2I4KBiMN",
+    "isArchived": true
+  },
+  {
+    "name": "Agent to Retrieve personal data",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "05225228-aaba-49de-ab04-a57709d0bdd5",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "c09af4de-843c-4320-a4c4-95ba8dfe35f2",
+        "name": "Webhook",
+        "webhookId": "05225228-aaba-49de-ab04-a57709d0bdd5"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://litellm:4000/embeddings",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "sk-hbuPX9VVGQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "={\n  \"model\": \"all-MiniLM-L6-v2\",\n  \"input\": \"{{ $json.body.question }}\"\n}",
+          "bodyParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          208,
+          0
+        ],
+        "id": "27a0805a-bf89-488e-a1b1-3ebd1197d20e",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "content": "My Recommendations:\n\nAgent Framework: Use n8n's built-in HTTP Request nodes + PostgreSQL nodes combined with LiteLLM for AI processing. This is simpler than LangChain for your use case.\nRetrieval Method: Hybrid approach - use vector similarity search for semantic queries + traditional SQL for exact matches (like document numbers).\nArchitecture: Create a workflow that can handle both semantic search (\"find my contact info\") and exact queries (\"get document ABC123\").",
+          "width": 480
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -368,
+          -256
+        ],
+        "typeVersion": 1,
+        "id": "25ce1abf-86e0-40e4-9cc3-f056af457327",
+        "name": "Sticky Note"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "createdAt": "2025-08-12T23:48:54.674Z",
+    "updatedAt": "2025-08-14T23:58:02.661Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "versionId": "36491026-4826-4015-9b58-ff9d2ebfe62e",
+    "triggerCount": 0,
+    "id": "8uLWrcitcsdEz4SW",
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "parentFolderId": null,
+    "isArchived": false
+  },
+  {
+    "name": "Linkedin (Claude) for test",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "You are a Content Researcher and Creator for Agentic Vibe. Generate a complete LinkedIn post with hashtags in a single response.\n\n**Brand Focus Areas:**\n- AI for Content Creation & Workflow Automation\n- LinkedIn Growth Strategies & Automation\n- Solopreneur Productivity with AI\n- Systems Thinking for Personal Brands\n- Future of Work & Automated Influence\n- No-Code Tools for Content & Lead Generation\n\n**Output Requirements:**\nGenerate ONE complete LinkedIn post including:\n1. **Compelling Hook** (1-2 lines that grab attention)\n2. **Value-Rich Content** (150-300 words with actionable insights)\n3. **Engagement Element** (question or CTA)\n4. **Professional Hashtags** (8-12 relevant hashtags)\n5. **Image Description** (for DALL-E generation)\n\n**Style Guide:**\n- Founder-level confidence with slight contrarian edge\n- Practical over theoretical\n- Future-focused and systemized\n- Avoid jargon and hype\n- Target ambitious solopreneurs and creators\n\n**Response Format:**\n```json\n{\n  \"post_title\": \"Brief descriptive title\",\n  \"post_content\": \"Full LinkedIn post content with line breaks and formatting\",\n  \"hashtags\": [\"#AI\", \"#LinkedInGrowth\", \"#Automation\", \"#Solopreneur\", \"#ContentCreation\", \"#Productivity\", \"#FutureOfWork\", \"#NoCode\"],\n  \"image_description\": \"Professional image description for DALL-E: clean, modern, business-appropriate visual that reinforces the main concept\"\n}\n```",
+          "hasOutputParser": true,
+          "options": {}
+        },
+        "id": "133dc56e-da8b-4410-b7bc-15829c24e083",
+        "name": "Unified Content Generator",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "position": [
+          -160,
+          -208
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4o-mini"
+          },
+          "options": {
+            "maxTokens": 1000,
+            "temperature": 0.7
+          }
+        },
+        "id": "604ed28f-babb-4f4f-9353-0bff5400135e",
+        "name": "Optimized Chat Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "position": [
+          -160,
+          0
+        ],
+        "typeVersion": 1.2,
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n  \"post_title\": \"AI as Your First Content Hire: Why Founders Shouldn't Wait\",\n  \"post_content\": \"Ghostwriters are outdated.\\n\\nTrain GPT once, and it ships LinkedIn gold in your voice daily.\\n\\nMost solopreneurs delay content scaling because they think hiring a ghostwriter is the next step. But AI can handle 80% with proper systems.\\n\\n→ Create your voice prompt library\\n→ Build content templates\\n→ Set up automated workflows\\n→ Review and refine outputs\\n\\nThis shifts content from a creative bottleneck to a scalable growth lever.\\n\\nWhat's stopping you from treating AI as your first content hire?\",\n  \"hashtags\": [\"#AI\", \"#LinkedInGrowth\", \"#Automation\", \"#Solopreneur\", \"#ContentCreation\", \"#Productivity\", \"#FutureOfWork\", \"#NoCode\"],\n  \"image_description\": \"A clean, modern workspace showing a laptop with AI interface, content calendar visible on screen, professional lighting, minimalist desk setup with plants, conveying productivity and automation\"\n}"
+        },
+        "id": "4a0f05d3-7030-42cd-8af5-064a125a3ef7",
+        "name": "Structured Parser",
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "position": [
+          48,
+          0
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "model": "dall-e-2",
+          "prompt": "={{ $json.output.image_description }}. Professional LinkedIn post image, realistic, clean, modern business aesthetic.",
+          "options": {
+            "size": "1024x1024"
+          }
+        },
+        "id": "949dbe94-9775-4eda-8c20-c5fe8f52da9c",
+        "name": "Parallel Image Generator",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "position": [
+          224,
+          -112
+        ],
+        "typeVersion": 1.8,
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {
+            "includeUnpaired": true
+          }
+        },
+        "id": "9273f8db-8559-43e1-9469-3d7eefaed653",
+        "name": "Final Merge",
+        "type": "n8n-nodes-base.merge",
+        "position": [
+          384,
+          -304
+        ],
+        "typeVersion": 3.2
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -352,
+          -208
+        ],
+        "id": "9bbc8cfb-426a-4edc-82f8-766e51079361",
+        "name": "Manual Trigger"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://webhook.site/d9508c66-5ec8-4633-891a-316c72132ef9",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ \n{\n  \"post_title\": $('Unified Content Generator').first().json.output.post_title,\n  \"post_content\": $('Unified Content Generator').first().json.output.post_content,\n  \"hashtags\": $('Unified Content Generator').first().json.output.hashtags.join(' '),\n  \"hashtags_array\": $('Unified Content Generator').first().json.output.hashtags,\n  \"image_info\": {\n    \"mime_type\": $json.mimeType,\n    \"file_size\": $json.fileSize,\n    \"file_name\": $json.fileName,\n    \"has_binary_data\": $binary.data ? \"Yes\" : \"No\"\n  },\n  \"linkedin_ready_post\": $('Unified Content Generator').first().json.output.post_content + \"\\n\\n\" + $('Unified Content Generator').first().json.output.hashtags.join(' '),\n  \"processing_time\": new Date().toISOString()\n}\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          688,
+          -400
+        ],
+        "id": "3e0ce96d-ff98-410e-a14f-c1afd3a69b8e",
+        "name": "Optimized Output"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Get the LinkedIn post data\nconst data = $input.first().json.output || $input.first().json;\n\n// Create formatted display\nconst formattedOutput = {\n  \"📝 POST TITLE\": data.post_title || \"No title\",\n  \"📄 CONTENT\": data.post_content || \"No content\",\n  \"🏷️ HASHTAGS\": data.hashtags ? data.hashtags.join(' ') : \"No hashtags\",\n  \"📱 LINKEDIN READY\": \"=== COPY BELOW ===\\n\\n\" + (data.post_content || \"\") + \"\\n\\n\" + (data.hashtags ? data.hashtags.join(' ') : \"\"),\n  \"🖼️ IMAGE\": \"Generated successfully\",\n  \"📊 STATS\": {\n    \"Content Length\": (data.post_content || \"\").length + \" characters\",\n    \"Hashtag Count\": Array.isArray(data.hashtags) ? data.hashtags.length : 0\n  }\n};\n\nreturn { json: formattedOutput };"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          704,
+          -96
+        ],
+        "id": "e98cda56-a102-4cd4-bb64-4ecd3da890a1",
+        "name": "Code"
+      },
+      {
+        "parameters": {
+          "fromEmail": "paul@z4z.ai",
+          "toEmail": "paul@z4z.ai",
+          "subject": "{{ $('Unified Content Generator').first().json.output.post_title }}",
+          "html": "={{ `\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5; }\n    .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n    .header { color: #0077b5; border-bottom: 2px solid #0077b5; padding-bottom: 10px; margin-bottom: 20px; }\n    .content { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }\n    .hashtags { background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0; }\n    .image-container { text-align: center; margin: 20px 0; padding: 20px; background: #f9f9f9; border-radius: 8px; }\n    .linkedin-ready { background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #4caf50; }\n    img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }\n    .copy-section { background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 10px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <h1 class=\"header\">🚀 Your LinkedIn Content is Ready!</h1>\n    \n    <h2 style=\"color: #333; margin-bottom: 10px;\">📝 ${$('Unified Content Generator').first().json.output.post_title}</h2>\n    \n    <div class=\"content\">\n      <h3 style=\"color: #0077b5; margin-top: 0;\">📄 Post Content:</h3>\n      <div style=\"white-space: pre-line; line-height: 1.6;\">${$('Unified Content Generator').first().json.output.post_content}</div>\n    </div>\n    \n    <div class=\"image-container\">\n      <h3 style=\"color: #0077b5; margin-top: 0;\">🖼️ Generated Image:</h3>\n      ${$binary.data ? \n        `<img src=\"data:${$binary.data.mimeType};base64,${$binary.data.data}\" alt=\"AI Generated LinkedIn Image\" style=\"max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);\" />` : \n        '<p style=\"color: #999; font-style: italic;\">🚫 Image not available - check image generation step</p>'\n      }\n      <p style=\"font-size: 12px; color: #666; margin-top: 10px;\">AI-generated image optimized for LinkedIn</p>\n    </div>\n    \n    <div class=\"hashtags\">\n      <h3 style=\"color: #0077b5; margin-top: 0;\">🏷️ Hashtags:</h3>\n      <p style=\"color: #0077b5; font-weight: bold; font-size: 16px;\">${$('Unified Content Generator').first().json.output.hashtags.join(' ')}</p>\n    </div>\n    \n    <div class=\"linkedin-ready\">\n      <h3 style=\"color: #2e7d32; margin-top: 0;\">📱 Ready to Copy & Paste:</h3>\n      <div class=\"copy-section\">\n        <strong>👆 Copy everything below and paste directly into LinkedIn:</strong>\n      </div>\n      <div style=\"background: white; padding: 15px; border-radius: 4px; border: 1px solid #ddd; white-space: pre-line; font-family: 'Courier New', monospace; font-size: 14px;\">${$('Unified Content Generator').first().json.output.post_content}\n\n${$('Unified Content Generator').first().json.output.hashtags.join(' ')}</div>\n    </div>\n    \n    <div style=\"border-top: 1px solid #ddd; padding-top: 20px; margin-top: 30px; color: #666; font-size: 12px; text-align: center;\">\n      <p><strong>🤖 Generated by Agentic Vibe AI</strong></p>\n      <p>📅 ${new Date().toLocaleDateString()} | ⏰ ${new Date().toLocaleTimeString()}</p>\n      <p>📊 Content: ${$('Unified Content Generator').first().json.output.post_content.length} chars | 🏷️ Hashtags: ${$('Unified Content Generator').first().json.output.hashtags.length}</p>\n      <p style=\"margin-top: 15px;\">💡 <em>Don't forget to upload the generated image when posting to LinkedIn!</em></p>\n    </div>\n  </div>\n</body>\n</html>\n` }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          464,
+          64
+        ],
+        "id": "89e620b4-0209-4525-a870-3e73931ac8fb",
+        "name": "Send email",
+        "webhookId": "122e484f-1148-4c5b-889f-12d3e97ebf56",
+        "credentials": {
+          "smtp": {
+            "id": "Htk6b3a0HhoEWmS6",
+            "name": "SMTP paul@z4z.ai"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Unified Content Generator": {
+        "main": [
+          [
+            {
+              "node": "Parallel Image Generator",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Final Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Optimized Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Unified Content Generator",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Parser": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Unified Content Generator",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parallel Image Generator": {
+        "main": [
+          [
+            {
+              "node": "Final Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Final Merge": {
+        "main": [
+          [
+            {
+              "node": "Send email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manual Trigger": {
+        "main": [
+          [
+            {
+              "node": "Unified Content Generator",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Optimized Output": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "createdAt": "2025-08-16T18:39:28.373Z",
+    "updatedAt": "2025-08-19T20:03:26.197Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "versionId": "5a6eba33-e042-4b35-a5ee-39d75e793feb",
+    "triggerCount": 0,
+    "id": "9JAm1mEpqyPhnnhc",
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "parentFolderId": "WxkLNiYI2I4KBiMN",
+    "isArchived": false
+  },
+  {
+    "name": "Template create posts for Linkedin",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=You are a Content Researcher Assistant at Agentic Vibe, an AI-first automation agency helping solopreneurs, creators, and digital-first founders grow their online presence — especially on LinkedIn — through scalable, hands-free content systems.\n\nYour task is to generate high-value content topics that align with our brand pillars and resonate deeply with our audience. These topics will later be expanded into posts by another agent.\n\n🔍 What to Focus On:\nGenerate content topics (not full content) based on these strategic themes:\n\nAI for Content Creation & Workflow Automation\n\nLinkedIn Automation Tools, Tactics & Growth Strategies\n\nSolopreneur Productivity Hacks Using AI & Automation\n\nSystems Thinking for Scaling Personal Brands\n\nThe Future of Work, Creators, and Automated Influence\n\nNo-Code Tools for Content & Lead Gen Automation\n\n✅ Your Output Per Topic:\nFor each idea, generate the following:\n\nTopic Title or Core Idea (1 line)\n\nShort Rationale (1–2 sentences on why this topic matters)\n\nSuggested Angle or Hook (1 LinkedIn-style framing or contrarian take)\n\n💡 Style Guide:\nKeep ideas insightful, actionable, and future-minded\n\nFavor founder-style energy: confident, sharp, and slightly contrarian when it adds value\n\nAvoid hype or jargon — focus on clarity, systemized insight, and utility",
+          "hasOutputParser": true,
+          "options": {}
+        },
+        "id": "4136e167-f2b8-4774-a8f6-ccb20aeec052",
+        "name": "Content topic generator2",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "position": [
+          -928,
+          96
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4o-mini"
+          },
+          "options": {}
+        },
+        "id": "2ade53ca-acc2-4dc2-98d7-8e33c2fdd7a7",
+        "name": "OpenAI Chat Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "position": [
+          -928,
+          336
+        ],
+        "typeVersion": 1.2,
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "[{\n \"title\": \"AI as Your First Content Hire: Why Founders Shouldn't Wait to Outsource Creation\",\n            \"rationale\": \"Most solopreneurs delay content scaling because they think hiring a ghostwriter is the next step — but AI can handle 80% with proper systems. This shifts content from a creative bottleneck to a scalable growth lever.\",\n            \"hook\": \"Ghostwriters are outdated. Train GPT once, and it ships LinkedIn gold in your voice daily. Welcome to hands-free thought leadership.\"\n          }]"
+        },
+        "id": "7f04d725-7aeb-4871-9cdf-2871d6180a27",
+        "name": "Structured Output Parser",
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "position": [
+          -736,
+          304
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "==You are an expert LinkedIn content creator and copywriter specializing in AI automation and solopreneur growth content for Agentic Vibe.\n\n**INPUT DATA:**\n- Title: {{ $json.output[0].title }}\n- Rationale: {{ $json.output[0].rationale }}\n- Hook/Angle: {{ $json.output[0].hook }}\n\n**YOUR TASK:**\nCreate a high-converting LinkedIn post that transforms this topic into engaging, actionable content.\n\n**POST REQUIREMENTS:**\n1. **Opening Hook**: Start with the provided hook/angle or improve it to grab attention in the first 1-2 lines\n2. **Value-Driven Content**: Deliver practical insights, actionable tips, or contrarian perspectives\n3. **Founder Voice**: Write with confidence, authority, and slight edge - like a successful solopreneur sharing hard-won insights\n4. **Engagement Elements**: Include questions, calls-to-action, or conversation starters\n5. **Length**: 150-300 words optimal for LinkedIn engagement\n6. **Formatting**: Use line breaks, emojis sparingly, and bullet points where helpful\n\n**TONE & STYLE:**\n- Confident but not arrogant\n- Practical over theoretical\n- Future-focused and systemized thinking\n- Avoid buzzwords and hype\n- Write like you're talking to ambitious founders, not beginners\n\n**IMAGE DESCRIPTION:**\nDescribe a professional, modern image that would complement the post on LinkedIn. The image should be:\n- Clean, professional aesthetic suitable for business audience\n- Visually reinforcing the main concept\n- Not overly complex or cluttered\n- Appropriate for LinkedIn's professional context\n\n**OUTPUT FORMAT:**\nReturn your response as structured content with clear sections for the post text and image description.",
+          "hasOutputParser": true,
+          "batching": {}
+        },
+        "id": "8da151b7-e482-4481-ae03-bec73e2e6c50",
+        "name": "Content creator",
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "position": [
+          -496,
+          96
+        ],
+        "typeVersion": 1.7
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-3.5-turbo",
+            "mode": "list",
+            "cachedResultName": "gpt-3.5-turbo"
+          },
+          "options": {}
+        },
+        "id": "cd1a6b15-38d0-4cd1-8b26-f8c76b403a0c",
+        "name": "OpenAI Chat Model1",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "position": [
+          -496,
+          272
+        ],
+        "typeVersion": 1.2,
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n  \"post title\": \"Exciting New Feature Launch 🚀\",\n  \"post content\": \"After months of collaboration, testing, and fine-tuning, we're thrilled to introduce our latest product feature: Smart Insights. It helps users uncover meaningful patterns in their data with just a few clicks. This wouldn't have been possible without our incredible team and supportive community. We're excited for what's next — and we'd love your feedback!\",\n  \"image description\": \"A laptop screen showcasing the new Smart Insights dashboard with colorful charts and graphs, surrounded by a team clapping in the background.\"\n}"
+        },
+        "id": "aabee4f2-1fef-4c17-a766-cd375d068fe1",
+        "name": "Structured Output Parser1",
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "position": [
+          -336,
+          272
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=You are an SEO specialist for LinkedIn. Your task is to generate highly relevant and effective hashtags for the following post. Consider the post's content, target audience, and current LinkedIn trends to maximize visibility and engagement.\n\n<post_title>{{ $json.output['post title'] }}</post_title>\n<post_content>{{ $json.output['post content'] }}</post_content>\n\nPlease generate:\n1. **3-5 broad, high-volume hashtags** (e.g., #AI, #Marketing, #Business)\n2. **3-5 niche-specific hashtags** that are directly relevant to the post's core topic (e.g., #SocialMediaAutomation, #ContentCreationAI, #LinkedInMarketingTips)\n3. **1-2 trending/topical hashtags** if applicable (e.g., #FutureOfWork, #DigitalTransformation)\n\nPresent them as a comma-separated list.",
+          "hasOutputParser": true,
+          "options": {}
+        },
+        "id": "2ea50cc9-a357-4208-bcda-67f65d420372",
+        "name": "Hashtag generator /SEO",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "position": [
+          0,
+          352
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4o-mini"
+          },
+          "options": {}
+        },
+        "id": "4c43cf22-f461-4ba6-bda1-1cc7afcb556c",
+        "name": "OpenAI Chat Model2",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "position": [
+          0,
+          544
+        ],
+        "typeVersion": 1.2,
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n  \"post title\": \"Exciting New Feature Launch 🚀\",\n  \"post content\": \"After months of collaboration, testing, and fine-tuning, we're thrilled to introduce our latest product feature: Smart Insights. It helps users uncover meaningful patterns in their data with just a few clicks. This wouldn't have been possible without our incredible team and supportive community. We're excited for what's next — and we'd love your feedback!\",\n  \"image description\": \"A laptop screen showcasing the new Smart Insights dashboard with colorful charts and graphs, surrounded by a team clapping in the background.\",\n\"Hashtags\":[\"#AI\",\"#Automation\"]\n}"
+        },
+        "id": "0a15c334-6bd7-45f9-a5e5-2bb0c39a5638",
+        "name": "Structured Output Parser2",
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "position": [
+          192,
+          544
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "id": "92ff38a7-fd50-4a60-bc88-261739cf80fa",
+        "name": "Merge",
+        "type": "n8n-nodes-base.merge",
+        "position": [
+          368,
+          96
+        ],
+        "typeVersion": 3.2
+      },
+      {
+        "parameters": {
+          "fromEmail": "paul@z4z.ai",
+          "toEmail": "paul@z4z.ai",
+          "subject": "={{ $('Content creator').item.json.output['post title'] }}",
+          "html": "=<h2>{{ $('Content creator').first().json.output['post title'] }}</h2>\n\n<div style=\"margin: 20px 0;\">\n{{ $('Content creator').first().json.output['post content'] }}\n</div>\n\n<div style=\"margin: 20px 0;\">\n<img src=\"data:image/png;base64,{{ $('Generate an image').first().binary.data.data }}\" alt=\"Generated Image\" style=\"max-width: 100%;\">\n</div>\n\n<div style=\"margin: 20px 0;\">\n<strong>Hashtags:</strong><br>\n{{ $json.output.Hashtags.join(' ') }}\n</div>",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          576,
+          112
+        ],
+        "id": "34e81a45-2115-4656-b1c0-60730a8f99e3",
+        "name": "Send email",
+        "webhookId": "122e484f-1148-4c5b-889f-12d3e97ebf56",
+        "credentials": {
+          "smtp": {
+            "id": "Htk6b3a0HhoEWmS6",
+            "name": "SMTP paul@z4z.ai"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -1072,
+          16
+        ],
+        "id": "a032c084-69e0-4513-8e11-83ca94bfc934",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "model": "dall-e-2",
+          "prompt": "=Generate an image for a linkedin post this is the description: {{ $json.output['image description'] }} .The images should be realistic for linkedin.",
+          "options": {}
+        },
+        "id": "6acec4af-0a6e-4468-b87f-efea54797539",
+        "name": "Generate an image",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "position": [
+          0,
+          0
+        ],
+        "typeVersion": 1.8,
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        },
+        "id": "b7a189e9-3660-443a-aa19-e285992f179d",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "position": [
+          -1536,
+          -416
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "postAs": "organization",
+          "text": "={{ $('Content creator').first().json.output['post content'] }}  {{ $json.output.Hashtags.join(' ') }}",
+          "shareMediaCategory": "IMAGE",
+          "additionalFields": {}
+        },
+        "id": "9e8935b7-37a8-4a0c-b674-8e5fa326b21e",
+        "name": "Create a post",
+        "type": "n8n-nodes-base.linkedIn",
+        "position": [
+          416,
+          -288
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://webhook.site/d9508c66-5ec8-4633-891a-316c72132ef9",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"post_title\": \"={{ $('Content creator').first().json.output['post title'] }}\",\n  \"post_content\": \"={{ $('Content creator').first().json.output['post content'] }}\",\n  \"hashtags\": \"={{ $json.output.Hashtags.join(' ') }}\",\n  \"hashtags_array\": \"={{ $json.output.Hashtags }}\",\n  \"image_info\": {\n    \"mime_type\": \"={{ $json.mimeType }}\",\n    \"file_size\": \"={{ $json.fileSize }}\",\n    \"file_name\": \"={{ $json.fileName }}\",\n    \"has_binary_data\": \"={{ $binary.data ? 'Yes' : 'No' }}\"\n  },\n  \"linkedin_ready_post\": \"={{ $('Content creator').first().json.output['post content'] }}\\n\\n{{ $json.output.Hashtags.join(' ') }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -240,
+          -384
+        ],
+        "id": "9133e9f3-3d4f-48f8-b4e7-8d199afe3018",
+        "name": "HTTP Request"
+      }
+    ],
+    "connections": {
+      "Content topic generator2": {
+        "main": [
+          [
+            {
+              "node": "Content creator",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Content topic generator2",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Content topic generator2",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Content creator": {
+        "main": [
+          [
+            {
+              "node": "Generate an image",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Hashtag generator /SEO",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Content creator",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser1": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Content creator",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Hashtag generator /SEO": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model2": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Hashtag generator /SEO",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser2": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Hashtag generator /SEO",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Send email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Content topic generator2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate an image": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "createdAt": "2025-08-19T20:55:29.217Z",
+    "updatedAt": "2025-08-19T20:56:14.459Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "versionId": "2de03d48-2f2f-4e8a-9bd5-6861fe75f034",
+    "triggerCount": 0,
+    "id": "axkeXuW4dYXbgAEO",
+    "meta": null,
+    "parentFolderId": "WxkLNiYI2I4KBiMN",
+    "isArchived": false
+  },
+  {
+    "name": "TEST_search business case",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "c6174e78-4e5f-4a03-87b0-e57125f85c26",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=### Role: Business Case Researcher and Draft Writer\n\n#### Objective:\nYour task is to explore the provided list of links, select one compelling business case that demonstrates the successful application of AI or innovative technology in a business setting, and draft a detailed business case report. This report should be suitable for sharing with an audience interested in practical AI applications and business process improvements.\n\n#### Links for Exploration:\n1. [Microsoft AI Customer Stories](https://www.microsoft.com/en-us/ai/ai-customer-stories)\n2. [Microsoft Customer Stories](https://www.microsoft.com/en-us/customers)\n3. [Salesforce Customer Success Stories](https://www.salesforce.com/news/stories/agentforce-customer-success-stories/)\n4. [Google Cloud AI Stories](https://cloud.google.com/ai/generative-ai/stories)\n5. [AWS Case Studies](https://aws.amazon.com/solutions/case-studies/)\n6. [HubSpot Small Business Case Studies](https://www.hubspot.com/case-studies/tag/small-business)\n7. [Zapier Customer Stories](https://zapier.com/customer-stories)\n8. [Intercom Customer Stories](https://www.intercom.com/customers)\n9. [Freshworks Case Studies](https://www.freshworks.com/resources/case-studies/)\n10. [Zoho CRM SMB Customers](https://www.zoho.com/crm/customers/smb.html)\n11. [Shopify Case Studies](https://www.shopify.com/case-studies)\n12. [Gorgias Customers](https://www.gorgias.com/customers)\n13. [Klaviyo Customer Story (Example Case)](https://www.klaviyo.com/blog/svenfish-customer-story)\n14. [BDC Canadian SMEs Using AI](https://www.bdc.ca/en/articles-tools/technology/free-resources/5-canadian-smes-using-ai-examples)\n15. [NRC AI-Infused Products for Canadian SMEs](https://nrc.canada.ca/en/stories/ai-infused-products-support-canadian-smes-overcome-global-competitors)\n16. [US Chamber AI Use Cases in B2B](https://labs.uschamber.ai/ai-use-cases-b2b)\n17. [Business Insider on Generative AI in Small Businesses](https://www.businessinsider.com/guides/tech/how-small-businesses-are-using-generative-ai)\n18. [AWS Blog on Generative AI for Small Businesses](https://aws.amazon.com/blogs/smb/exploring-practical-use-cases-for-generative-ai-in-small-businesses/)\n19. [Google Workspace AI for Small Business](https://workspace.google.com/resources/ai-for-small-business/)\n\n#### Key Requirements:\n- **Selection**: Choose a business case that is particularly relevant and impactful for SMBs or SMEs.\n- **Detail and Clarity**: Provide a comprehensive overview of the business case, including the problem addressed, the solution implemented, and the outcomes achieved.\n- **Engagement**: Write in a clear, engaging manner that highlights the significance of the case and its broader implications for business innovation.\n- **Format**: Structure the report with clear sections such as Introduction, Challenge, Solution, Results, and Conclusion.\n\n#### Creative Directions:\n- Focus on cases that showcase innovative uses of AI or technology in business processes.\n- Highlight any unique challenges faced and how they were overcome.\n- Discuss the broader impact of the solution on the business and industry.\n\n### Prompt Rationale:\nThis prompt is designed to guide the AI-agent in selecting and drafting a business case that not only informs but also inspires the audience by showcasing real-world applications of AI and technology in business. By emphasizing clarity, engagement, and relevance, the prompt ensures the creation of a detailed and compelling business case report.",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2.2,
+        "position": [
+          416,
+          0
+        ],
+        "id": "5e122f12-4950-4a22-8ba5-51423faf3043",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4.1-mini"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          288,
+          208
+        ],
+        "id": "6fa206bf-32b5-4c28-bbc8-f37beac0bece",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "createdAt": "2025-08-20T19:13:33.733Z",
+    "updatedAt": "2025-08-22T01:49:06.265Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "versionId": "3554d1ca-4692-4c5e-81b8-8a6c9ddd74b4",
+    "triggerCount": 0,
+    "id": "bcrBDBgOswgY2rVz",
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "parentFolderId": null,
+    "isArchived": false
+  },
+  {
+    "name": "Personal Assistant",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "3bea7204-4a86-47fd-98fe-258aa0411d95",
+        "name": "When chat message received",
+        "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+        "position": [
+          -576,
+          160
+        ],
+        "webhookId": "989c3a79-5a0c-4ca1-a542-55e060816121",
+        "typeVersion": 1.1
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-2.5-pro-preview-05-06",
+          "options": {}
+        },
+        "id": "02de9e80-8d6c-4b07-98db-b552237b8c2e",
+        "name": "Google Gemini Chat Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "position": [
+          -448,
+          368
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {},
+        "id": "0ee11493-4778-4eeb-b21f-39d18c2cb08c",
+        "name": "Simple Memory",
+        "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+        "position": [
+          -240,
+          368
+        ],
+        "typeVersion": 1.3
+      },
+      {
+        "parameters": {
+          "path": "b37ab045-0b99-4d57-af44-6ae1e9ac6381"
+        },
+        "id": "e428399c-f83f-4257-82e4-c6cc1d981605",
+        "name": "MCP Server Trigger",
+        "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+        "position": [
+          -336,
+          560
+        ],
+        "webhookId": "b37ab045-0b99-4d57-af44-6ae1e9ac6381",
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "sseEndpoint": "<set-your-url-here>"
+        },
+        "id": "d5d74a59-c1b4-4b8b-ab48-24912791aa8b",
+        "name": "MCP Client",
+        "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+        "position": [
+          112,
+          368
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "calendar": {
+            "__rl": true,
+            "mode": "list",
+            "value": "hello@1node.ai",
+            "cachedResultName": "hello@1node.ai"
+          },
+          "additionalFields": {}
+        },
+        "id": "7727d135-126f-4df5-8cd7-861041d4ac24",
+        "name": "Create event",
+        "type": "n8n-nodes-base.googleCalendarTool",
+        "position": [
+          464,
+          608
+        ],
+        "typeVersion": 1.3
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "calendar": {
+            "__rl": true,
+            "mode": "list",
+            "value": "hello@1node.ai",
+            "cachedResultName": "hello@1node.ai"
+          },
+          "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+          "updateFields": {}
+        },
+        "id": "b6a7d302-3ead-4d1b-bd86-5d60b35fc6f1",
+        "name": "Update event",
+        "type": "n8n-nodes-base.googleCalendarTool",
+        "position": [
+          224,
+          944
+        ],
+        "typeVersion": 1.3
+      },
+      {
+        "parameters": {
+          "resource": "draft",
+          "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+          "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `Sign off as \"Your name, company name\"`, 'string') }}",
+          "options": {}
+        },
+        "id": "eccfc7dd-2384-4e23-9ade-8ab73fb41fa9",
+        "name": "Draft email",
+        "type": "n8n-nodes-base.gmailTool",
+        "position": [
+          -96,
+          1008
+        ],
+        "webhookId": "4e76cb3d-4239-4030-a23a-544029535f70",
+        "typeVersion": 2.1
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "164f6e50-c2c4-469b-81dd-64b5169a5626",
+        "name": "Personal Assistant",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "position": [
+          -320,
+          160
+        ],
+        "typeVersion": 1.9
+      },
+      {
+        "parameters": {
+          "content": "# Calendar nodes\n\nYou could order your agent to create a new event in your Google Calendar, find a specific event, get multiple events or update an event's details. \n\n**The true power of these nodes regarding Email, CRM and Calendar remains in combining multiple into one set of instructions**.\n\n## Examples:\n\n- Find the contact for Jhon for A. Corp and send him an email asking saying that you have scheduled the meeting for next Wednesday at 9AM. Draft an email to remind him of the details and the topic of discussion being the weekly update call and the main company bottlenecks.\n- Update the contact details for Jhon since he changed his email and company to B corp and john[at]bcorpfakeemail[dot]com and please update me about my upcoming meetings with him next month.\n- Send me a summary for all my meetings today. Draft one email for each different person that I'll meet with today, reminding them about today's meeting\n",
+          "height": 620,
+          "width": 560,
+          "color": 5
+        },
+        "id": "ebd0a267-aedf-4a6c-b395-ba1423c24010",
+        "name": "Sticky Note",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          560,
+          512
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "content": "# Email nodes\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nYour AI Agent will be able to search through your email inbox to find specific email content for you. Based on this records you can fetch information quickly and order to draft responses to review later.\n\n## Examples:\n\n- hey what were the last 5 emails sent to Jon from X corp? \n- Draft an email with these details to Jon sharing I can't make it today and propose a new time for 9AM tomorrow. ",
+          "height": 500,
+          "width": 460,
+          "color": 3
+        },
+        "id": "cb15ea88-0aa4-46e7-be38-30135d8b19f6",
+        "name": "Sticky Note1",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -368,
+          928
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "content": "# CRM nodes\n\nWith these node operations your \nAI agent will be able to do the following:\n\n- Add a new row with contact data\n- Find a row and its details in the table\n- Update a value or group of values\n\n\n## Examples:\n\n- Add a new contact data with Rick as first name\n his cell is +1 XXX XXX XXXX. \nI will tell you the email later on.\n- Can you tell me the details and email for Jon Doe?\n I want to send him an email reminder.\n- Update Rick's email to rick[at]someemail[dot]com from X corp. please.",
+          "height": 480,
+          "width": 660,
+          "color": 4
+        },
+        "id": "77d7e086-1ce5-4253-a2e3-470624c2c780",
+        "name": "Sticky Note2",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1088,
+          592
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "content": "## MCP Client\n\nPaste your MCP client URL from the MCP server trigger node.\n\nCustomize your output node to receive the workflow completion notifications (eg. Telegram, Gmail) from your personal assistant",
+          "height": 480,
+          "width": 480
+        },
+        "id": "549cac6d-9741-410a-a425-092b3f74b67d",
+        "name": "Sticky Note3",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          0,
+          0
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "content": "",
+          "height": 620,
+          "width": 400,
+          "color": 5
+        },
+        "id": "386a0658-4381-4d29-8847-8c1b76bc89ba",
+        "name": "Sticky Note4",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          160,
+          512
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit?usp=drivesdk",
+            "cachedResultName": "Contacts"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gid=0",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit#gid=0",
+            "cachedResultName": "Sheet1"
+          },
+          "columns": {
+            "value": {},
+            "schema": [],
+            "mappingMode": "autoMapInputData",
+            "matchingColumns": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "d5f57ad2-6a3c-4bc1-81dd-2c4cc546348b",
+        "name": "Add new row",
+        "type": "n8n-nodes-base.googleSheetsTool",
+        "position": [
+          -752,
+          640
+        ],
+        "typeVersion": 4.5
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit?usp=drivesdk",
+            "cachedResultName": "Contacts"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gid=0",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit#gid=0",
+            "cachedResultName": "Sheet1"
+          },
+          "options": {}
+        },
+        "id": "fe513554-07e9-4539-b2f1-da4156798ef3",
+        "name": "Find row",
+        "type": "n8n-nodes-base.googleSheetsTool",
+        "position": [
+          -640,
+          800
+        ],
+        "typeVersion": 4.5
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit?usp=drivesdk",
+            "cachedResultName": "Contacts"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gid=0",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JDoEkNqk1c_TrIht2n1XF-jmIWpk48DP3NUaNbhcFV8/edit#gid=0",
+            "cachedResultName": "Sheet1"
+          },
+          "columns": {
+            "value": {},
+            "schema": [
+              {
+                "id": "row_number",
+                "type": "string",
+                "display": true,
+                "removed": false,
+                "readOnly": true,
+                "required": false,
+                "displayName": "row_number",
+                "defaultMatch": false,
+                "canBeUsedToMatch": true
+              }
+            ],
+            "mappingMode": "autoMapInputData",
+            "matchingColumns": [
+              "row_number"
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "69259005-84e6-4039-9dde-e0f9618159eb",
+        "name": "Update row",
+        "type": "n8n-nodes-base.googleSheetsTool",
+        "position": [
+          -544,
+          912
+        ],
+        "typeVersion": 4.5
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+          "filters": {}
+        },
+        "id": "c7dc9a15-9c76-487f-b33e-e70980db1619",
+        "name": "Find emails",
+        "type": "n8n-nodes-base.gmailTool",
+        "position": [
+          -240,
+          1008
+        ],
+        "webhookId": "b36e3112-52b1-4e03-a2d3-74d5d4705891",
+        "typeVersion": 2.1
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "calendar": {
+            "__rl": true,
+            "mode": "list",
+            "value": "hello@1node.ai",
+            "cachedResultName": "hello@1node.ai"
+          },
+          "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+          "options": {}
+        },
+        "id": "b5e30637-b939-4b27-99a3-d76a601ed886",
+        "name": "Find single event",
+        "type": "n8n-nodes-base.googleCalendarTool",
+        "position": [
+          400,
+          752
+        ],
+        "typeVersion": 1.3
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "calendar": {
+            "__rl": true,
+            "mode": "list",
+            "value": "hello@1node.ai",
+            "cachedResultName": "hello@1node.ai"
+          },
+          "limit": 10,
+          "options": {}
+        },
+        "id": "939ad5bc-a258-493d-9d9f-721ae7b728b3",
+        "name": "Find multiple events",
+        "type": "n8n-nodes-base.googleCalendarTool",
+        "position": [
+          320,
+          848
+        ],
+        "typeVersion": 1.3
+      }
+    ],
+    "connections": {
+      "Find row": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "MCP Client": {
+        "ai_tool": [
+          [
+            {
+              "node": "Personal Assistant",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add new row": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Draft email": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find emails": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create event": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update event": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Simple Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "Personal Assistant",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find single event": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find multiple events": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Personal Assistant",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When chat message received": {
+        "main": [
+          [
+            {
+              "node": "Personal Assistant",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "createdAt": "2025-08-09T23:27:47.758Z",
+    "updatedAt": "2025-08-10T18:01:05.118Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "versionId": "1f71d41f-d9d5-4744-9051-12f02bda1ec3",
+    "triggerCount": 0,
+    "id": "hbTTSv7DhpjP9kGE",
+    "meta": null,
+    "parentFolderId": "WxkLNiYI2I4KBiMN",
+    "isArchived": false
+  },
+  {
+    "name": "Linkedin content_(n8n)",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        },
+        "id": "6d28624c-db86-46a8-a793-3300248b2191",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "position": [
+          -1376,
+          -288
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=### Role: Content Topic Researcher Assistant\n\n#### Objective:\nYour mission is to uncover compelling and insightful content topics that resonate with owners and top managers of Small and Medium-sized Businesses (SMBs) and Small and Medium-sized Enterprises (SMEs). These topics should focus on innovative solutions and strategies for improving and automating business processes, particularly through the use of AI-agents.\n\n#### Key Requirements:\n- **Audience Focus**: Tailor your research to the interests and challenges faced by SMB and SME leaders, particularly in the realms of sales, marketing, logistics, and business operations.\n- **Innovation and Automation**: Highlight the role of AI-agents in workflow automation and process improvement.\n- **Relevance and Depth**: Ensure topics are timely, actionable, and provide deep insights or unique perspectives.\n- **Format**: Present your findings as a list of potential content topics, each accompanied by a brief description or rationale.\n\n#### Creative Directions:\n- Explore emerging trends in AI-driven business process automation.\n- Consider case studies or success stories of companies that have effectively implemented AI solutions.\n- Investigate common pain points in SMBs/SMEs and propose AI-based solutions.\n- Suggest thought leadership topics that position our audience as forward-thinking leaders in their industries.\n\n✅ Your Output Per Topic:\nFor each idea, generate the following:\n\nTopic Title or Core Idea (1 line)\n\nShort Rationale (1–2 sentences on why this topic matters)\n\nSuggested Angle or Hook (1 LinkedIn-style framing or contrarian take)\n\n\n#### Example Topics:\n1. \"Revolutionizing Sales with AI: How SMBs Can Automate Lead Generation and Follow-up\"\n2. \"The Future of Logistics: AI Solutions for Streamlining Supply Chains\"\n3. \"AI in Marketing: Personalizing Customer Experiences at Scale\"\n4. \"Optimizing Business Operations: The Role of AI in Workflow Automation\"\n\n### Prompt Rationale:\nThis prompt is designed to guide the AI-agent in generating content topics that are not only relevant and engaging for the target audience but also aligned with the strategic focus on AI-driven business process improvements. By emphasizing the need for depth, innovation, and audience-specific insights, the prompt encourages the creation of topics that will be valuable for LinkedIn content aimed at SMB and SME leaders.",
+          "hasOutputParser": true,
+          "options": {}
+        },
+        "id": "c1248467-5989-4d06-8414-0ba4893ce053",
+        "name": "Content topic generator2",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "position": [
+          -928,
+          192
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4o-mini"
+          },
+          "options": {}
+        },
+        "id": "945afcef-fa25-452b-aae5-00d9866c5c65",
+        "name": "OpenAI Chat Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "position": [
+          -928,
+          432
+        ],
+        "typeVersion": 1.2,
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "[{\n \"title\": \"AI as Your First Content Hire: Why Founders Shouldn't Wait to Outsource Creation\",\n            \"rationale\": \"Most solopreneurs delay content scaling because they think hiring a ghostwriter is the next step — but AI can handle 80% with proper systems. This shifts content from a creative bottleneck to a scalable growth lever.\",\n            \"hook\": \"Ghostwriters are outdated. Train GPT once, and it ships LinkedIn gold in your voice daily. Welcome to hands-free thought leadership.\"\n          }]"
+        },
+        "id": "1721fe39-0bc3-45cd-95ad-48dc3bee77b2",
+        "name": "Structured Output Parser",
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "position": [
+          -736,
+          400
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=### Role: Expert LinkedIn Content Creator and Copywriter\n\n#### Objective:\nCraft a compelling and humanized LinkedIn post based on the provided content topic, designed to engage and inform owners and top managers of SMBs and SMEs. Your content should highlight innovative AI automation solutions and solopreneur growth strategies, aligning with the Agentic Vibe brand.\n\n#### Input Data:\n- **Title**: {{ $json.output[0].title }}\n- **Rationale**: {{ $json.output[0].rationale }}\n- **Hook/Angle**: {{ $json.output[0].hook }}\n\n#### Key Requirements:\n- **Audience Engagement**: Write in a conversational and relatable tone that resonates with business leaders.\n- **Clarity and Insight**: Clearly convey the value and relevance of the topic, supported by the rationale and hook.\n- **Human Touch**: Ensure the text feels authentic and personable, avoiding overly technical or robotic language.\n- **Formatting**: Structure the content for easy reading on LinkedIn, using short paragraphs, bullet points, or subheadings as needed.\n\n#### Creative Directions:\n- Start with a strong opening that captures attention and sets the stage for the discussion.\n- Use storytelling elements or real-world examples to illustrate key points.\n- Encourage interaction by posing questions or inviting comments from readers.\n- Conclude with a call to action or thought-provoking statement that encourages further engagement.\n\n#### Example Structure:\n1. **Opening**: Introduce the topic with a compelling hook.\n2. **Body**: Elaborate on the rationale, using relatable language and examples.\n3. **Engagement**: Pose a question or invite readers to share their experiences.\n4. **Conclusion**: Wrap up with a call to action or a forward-looking statement.\n\n### Prompt Rationale:\nThis prompt is crafted to guide the AI-agent in producing LinkedIn content that is not only informative and aligned with the provided topic but also engaging and human-like. By focusing on clarity, relatability, and audience interaction, the prompt ensures the creation of posts that are well-suited for LinkedIn's professional network.",
+          "hasOutputParser": true,
+          "batching": {}
+        },
+        "id": "d634f3fa-e568-4b81-923f-5aba71a8edea",
+        "name": "Content creator",
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "position": [
+          -496,
+          192
+        ],
+        "typeVersion": 1.7
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-3.5-turbo",
+            "mode": "list",
+            "cachedResultName": "gpt-3.5-turbo"
+          },
+          "options": {}
+        },
+        "id": "afb23bd0-9c6b-4924-ba86-9f1a3680a4a8",
+        "name": "OpenAI Chat Model1",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "position": [
+          -496,
+          368
+        ],
+        "typeVersion": 1.2,
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n  \"post title\": \"Exciting New Feature Launch 🚀\",\n  \"post content\": \"After months of collaboration, testing, and fine-tuning, we're thrilled to introduce our latest product feature: Smart Insights. It helps users uncover meaningful patterns in their data with just a few clicks. This wouldn't have been possible without our incredible team and supportive community. We're excited for what's next — and we'd love your feedback!\",\n  \"image description\": \"A laptop screen showcasing the new Smart Insights dashboard with colorful charts and graphs, surrounded by a team clapping in the background.\"\n}"
+        },
+        "id": "c49975ed-8ea1-43d3-9993-0a07b01d683a",
+        "name": "Structured Output Parser1",
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "position": [
+          -336,
+          368
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=You are an SEO specialist for LinkedIn. Your task is to generate highly relevant and effective hashtags for the following post. Consider the post's content, target audience, and current LinkedIn trends to maximize visibility and engagement.\n\n<post_title>{{ $json.output['post title'] }}</post_title>\n<post_content>{{ $json.output['post content'] }}</post_content>\n\nPlease generate:\n1. **3-5 broad, high-volume hashtags** (e.g., #AI, #Marketing, #Business)\n2. **3-5 niche-specific hashtags** that are directly relevant to the post's core topic (e.g., #SocialMediaAutomation, #ContentCreationAI, #LinkedInMarketingTips)\n3. **1-2 trending/topical hashtags** if applicable (e.g., #FutureOfWork, #DigitalTransformation)\n\nPresent them as a comma-separated list.",
+          "hasOutputParser": true,
+          "options": {}
+        },
+        "id": "31c3b04b-9471-4108-8993-0a1764576e48",
+        "name": "Hashtag generator /SEO",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "position": [
+          0,
+          448
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4o-mini"
+          },
+          "options": {}
+        },
+        "id": "7ec84218-254c-4891-be1f-b3c239eb724b",
+        "name": "OpenAI Chat Model2",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "position": [
+          0,
+          640
+        ],
+        "typeVersion": 1.2,
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n  \"post title\": \"Exciting New Feature Launch 🚀\",\n  \"post content\": \"After months of collaboration, testing, and fine-tuning, we're thrilled to introduce our latest product feature: Smart Insights. It helps users uncover meaningful patterns in their data with just a few clicks. This wouldn't have been possible without our incredible team and supportive community. We're excited for what's next — and we'd love your feedback!\",\n  \"image description\": \"A laptop screen showcasing the new Smart Insights dashboard with colorful charts and graphs, surrounded by a team clapping in the background.\",\n\"Hashtags\":[\"#AI\",\"#Automation\"]\n}"
+        },
+        "id": "1444585e-b4d2-469c-b0cb-849369c7a53c",
+        "name": "Structured Output Parser2",
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "position": [
+          192,
+          640
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "id": "3fd42e6f-8221-460b-96d8-ef21168b8e9d",
+        "name": "Merge",
+        "type": "n8n-nodes-base.merge",
+        "position": [
+          368,
+          192
+        ],
+        "typeVersion": 3.2
+      },
+      {
+        "parameters": {
+          "fromEmail": "paul@z4z.ai",
+          "toEmail": "paul@z4z.ai",
+          "subject": "={{ $('Content creator').item.json.output['post title'] }}",
+          "html": "=<h2>{{ $('Content creator').first().json.output['post title'] }}</h2>\n\n<div style=\"margin: 20px 0;\">\n{{ $('Content creator').first().json.output['post content'] }}\n</div>\n\n<div style=\"margin: 20px 0;\">\n<img src=\"data:image/png;base64,{{ $('Generate an image').first().binary.data.data }}\" alt=\"Generated Image\" style=\"max-width: 100%;\">\n</div>\n\n<div style=\"margin: 20px 0;\">\n<strong>Hashtags:</strong><br>\n{{ $json.output.Hashtags.join(' ') }}\n</div>",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          576,
+          208
+        ],
+        "id": "c814edac-04db-40e8-96fe-e12f851ae8b3",
+        "name": "Send email",
+        "webhookId": "122e484f-1148-4c5b-889f-12d3e97ebf56",
+        "credentials": {
+          "smtp": {
+            "id": "Htk6b3a0HhoEWmS6",
+            "name": "SMTP paul@z4z.ai"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "postAs": "organization",
+          "text": "={{ $('Content creator').first().json.output['post content'] }}  {{ $json.output.Hashtags.join(' ') }}",
+          "shareMediaCategory": "IMAGE",
+          "additionalFields": {}
+        },
+        "id": "ada28f20-be7b-47d8-9b10-ec0bb77b7de6",
+        "name": "Create a post",
+        "type": "n8n-nodes-base.linkedIn",
+        "position": [
+          576,
+          -160
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://webhook.site/d9508c66-5ec8-4633-891a-316c72132ef9",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"post_title\": \"={{ $('Content creator').first().json.output['post title'] }}\",\n  \"post_content\": \"={{ $('Content creator').first().json.output['post content'] }}\",\n  \"hashtags\": \"={{ $json.output.Hashtags.join(' ') }}\",\n  \"hashtags_array\": \"={{ $json.output.Hashtags }}\",\n  \"image_info\": {\n    \"mime_type\": \"={{ $json.mimeType }}\",\n    \"file_size\": \"={{ $json.fileSize }}\",\n    \"file_name\": \"={{ $json.fileName }}\",\n    \"has_binary_data\": \"={{ $binary.data ? 'Yes' : 'No' }}\"\n  },\n  \"linkedin_ready_post\": \"={{ $('Content creator').first().json.output['post content'] }}\\n\\n{{ $json.output.Hashtags.join(' ') }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -80,
+          -256
+        ],
+        "id": "05787103-66c4-4d71-be8a-7a280ccffee1",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -1136,
+          208
+        ],
+        "id": "7a93b759-0e19-4cfe-b0da-cddc573061c3",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "prompt": "=Generate an image for a linkedin post this is the description: {{ $json.output['image description'] }} .The images should be realistic for linkedin.",
+          "options": {}
+        },
+        "id": "a0805669-a22f-4453-9520-0650fdfc6afa",
+        "name": "Generate an image",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "position": [
+          0,
+          96
+        ],
+        "typeVersion": 1.8,
+        "credentials": {
+          "openAiApi": {
+            "id": "T6jALHM6FIHsU7i3",
+            "name": "OpenAi API"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Send email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Content creator": {
+        "main": [
+          [
+            {
+              "node": "Generate an image",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Hashtag generator /SEO",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          []
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Content topic generator2",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Content creator",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model2": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Hashtag generator /SEO",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Hashtag generator /SEO": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Content topic generator2": {
+        "main": [
+          [
+            {
+              "node": "Content creator",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Content topic generator2",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser1": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Content creator",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser2": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Hashtag generator /SEO",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Content topic generator2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate an image": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "createdAt": "2025-08-16T15:56:12.179Z",
+    "updatedAt": "2025-08-20T19:11:08.469Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "versionId": "1871613d-f4b7-43b9-b16c-4008fd2f4108",
+    "triggerCount": 0,
+    "id": "HFpk4iBAh7qajOA1",
+    "meta": null,
+    "parentFolderId": null,
+    "isArchived": false
+  },
+  {
+    "name": "SYNC CAL LPD CAL 939",
+    "active": true,
+    "nodes": [
+      {
+        "parameters": {
+          "calendar": {
+            "__rl": true,
+            "value": "9397417@gmail.com",
+            "mode": "list",
+            "cachedResultName": "9397417@gmail.com"
+          },
+          "start": "={{ $('Google Calendar created').item.json.start.dateTime }}",
+          "end": "={{ $('Google Calendar created').item.json.end.dateTime }}",
+          "additionalFields": {
+            "summary": "=PLACEHOLDER FOR \"{{ $('Google Calendar created').item.json.organizer.email }} {{ $('Google Calendar created').item.json.summary }}\""
+          }
+        },
+        "type": "n8n-nodes-base.googleCalendar",
+        "typeVersion": 1.3,
+        "position": [
+          512,
+          0
+        ],
+        "id": "7920b1b7-9f25-4c15-9002-0c2ffc3a0267",
+        "name": "Create Copy in Main Calendar",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "1zAAg8U8iPEwINFE",
+            "name": "GCalendar account 9397417"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          512,
+          208
+        ],
+        "id": "67fb9bc3-3d0f-4b3f-b72c-978e5d827dfd",
+        "name": "Do Nothing1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "31f37451-9f49-41c8-bf80-e8722fafe7ba",
+                "leftValue": "={{ $json.start.dateTime }}",
+                "rightValue": "2025-06-26T00:00:00",
+                "operator": {
+                  "type": "dateTime",
+                  "operation": "afterOrEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          288,
+          112
+        ],
+        "id": "d1f54e90-36cf-42fe-b8a3-67435311ee64",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          },
+          "calendarId": {
+            "__rl": true,
+            "value": "lpd2000@gmail.com",
+            "mode": "list",
+            "cachedResultName": "lpd2000@gmail.com"
+          },
+          "triggerOn": "eventCreated",
+          "options": {
+            "matchTerm": ""
+          }
+        },
+        "type": "n8n-nodes-base.googleCalendarTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          208
+        ],
+        "id": "bd532594-6ce1-4499-9602-99efe74e49cc",
+        "name": "Google Calendar created",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "UpYMdK76SRAFiDWv",
+            "name": "GCalendar account LPD2000"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          },
+          "calendarId": {
+            "__rl": true,
+            "value": "lpd2000@gmail.com",
+            "mode": "list",
+            "cachedResultName": "lpd2000@gmail.com"
+          },
+          "triggerOn": "eventUpdated",
+          "options": {
+            "matchTerm": ""
+          }
+        },
+        "type": "n8n-nodes-base.googleCalendarTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "61f2c5e8-5aee-4f6f-a8f1-434802679d3a",
+        "name": "Google Calendar updated",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "UpYMdK76SRAFiDWv",
+            "name": "GCalendar account LPD2000"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Create Copy in Main Calendar",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Do Nothing1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Calendar created": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Calendar updated": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "createdAt": "2025-08-09T23:27:00.931Z",
+    "updatedAt": "2025-08-09T23:38:55.038Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": {
+      "node:Google Calendar created": {
+        "lastTimeChecked": "2025-08-25T17:39:49Z"
+      },
+      "node:Google Calendar updated": {
+        "lastTimeChecked": "2025-08-25T17:39:51Z"
+      }
+    },
+    "pinData": {},
+    "versionId": "10893f23-f22c-482e-bc6f-108358d6925d",
+    "triggerCount": 2,
+    "id": "o0cOT9WSMHxwnPUB",
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "parentFolderId": null,
+    "isArchived": false
+  },
+  {
+    "name": "RAG injection",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "cc00169d-17a1-4acd-afb1-e17c81c9690b",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "fileSelector": "=/data/doc_form_1.csv",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.readWriteFile",
+        "typeVersion": 1,
+        "position": [
+          208,
+          0
+        ],
+        "id": "be68f0bc-1844-42c1-ad4a-167fa10ab1c7",
+        "name": "Read/Write Files from Disk",
+        "alwaysOutputData": false
+      },
+      {
+        "parameters": {
+          "options": {
+            "headerRow": true
+          }
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1,
+        "position": [
+          416,
+          0
+        ],
+        "id": "e86b8b0e-eda1-4a66-8789-7ea1d9720e41",
+        "name": "Extract from File"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://ollama:11434/api/embeddings",
+          "sendHeaders": true,
+          "specifyHeaders": "json",
+          "jsonHeaders": "={\n  \"Content-Type\": \"application/json\"\n}",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={\n  \"model\": \"nomic-embed-text\", \n  \"prompt\": \"{{ $('Code1').first().json.content }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          832,
+          0
+        ],
+        "id": "5dbf3640-0b6b-4349-b784-634a77a26e25",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO personal_data (category, content, metadata, source, embedding) \nVALUES (\n  '{{ $(\"Code1\").first().json.category }}',\n  '{{ $(\"Code1\").first().json.content }}',\n  '{{ $(\"Code1\").first().json.metadata }}'::jsonb,\n  '{{ $(\"Code1\").first().json.source }}',\n  '{{ JSON.stringify($(\"HTTP Request\").first().json.embedding) }}'::vector(768)\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1040,
+          0
+        ],
+        "id": "7ee035f0-77e2-412c-9cb3-41875bcddf55",
+        "name": "Execute a SQL query",
+        "credentials": {
+          "postgres": {
+            "id": "2xkaCrgCVOfCETb3",
+            "name": "PostgreSQL credential n8n_database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nreturn items.map((item, index) => ({\n  id: index + 1,\n  content: `${item.json.Type} document for ${item.json.Name}. Document number: ${item.json.Number}. Issued on ${item.json.Issue_date} in ${item.json.Issue_place}, expires on ${item.json.Expiration_date}.`,\n  category: \"personal_documents\",\n  source: \"doc_form_1\", \n  metadata: JSON.stringify({\n    name: item.json.Name,\n    type: item.json.Type,\n    number: item.json.Number,\n    issue_date: item.json.Issue_date,\n    expiration_date: item.json.Expiration_date,\n    issue_place: item.json.Issue_place\n  })\n}));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          624,
+          0
+        ],
+        "id": "c8065d0e-0931-4b9e-bd26-d199f688c8e6",
+        "name": "Code1"
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Read/Write Files from Disk",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read/Write Files from Disk": {
+        "main": [
+          [
+            {
+              "node": "Extract from File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "Code1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "createdAt": "2025-08-09T23:46:45.440Z",
+    "updatedAt": "2025-08-15T01:08:39.462Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "versionId": "446384bc-e972-49b6-9a1d-508428590425",
+    "triggerCount": 0,
+    "id": "Oo5AHVR40Sl5TvRj",
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "parentFolderId": "WxkLNiYI2I4KBiMN",
+    "isArchived": false
+  },
+  {
+    "name": "CYBX test2",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "name": "Start",
+        "type": "n8n-nodes-base.start",
+        "typeVersion": 1,
+        "position": [
+          -208,
+          112
+        ],
+        "id": "06c03b54-a531-4de6-8edd-2eb57a439274"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "17hJ7i9Wh3wnYRzocfyxVqp9W3KxcK5m_iNNDjV9w7IE",
+            "mode": "list",
+            "cachedResultName": "f1_Thrive-2024-Attendee-Participation",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17hJ7i9Wh3wnYRzocfyxVqp9W3KxcK5m_iNNDjV9w7IE/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1492236185,
+            "mode": "list",
+            "cachedResultName": "Event Participant Details",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17hJ7i9Wh3wnYRzocfyxVqp9W3KxcK5m_iNNDjV9w7IE/edit#gid=1492236185"
+          },
+          "options": {}
+        },
+        "name": "Read Master Contacts (File 1)",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 3,
+        "position": [
+          0,
+          0
+        ],
+        "id": "4bd471da-3d34-4ef3-a6b2-b639e62f443b"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "13xVeTDk2RJQzA2T-MGcpldtxF10AzzrMO3AbPUYG9UA",
+            "mode": "list",
+            "cachedResultName": "f2_Behavioral_shortlist",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13xVeTDk2RJQzA2T-MGcpldtxF10AzzrMO3AbPUYG9UA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13xVeTDk2RJQzA2T-MGcpldtxF10AzzrMO3AbPUYG9UA/edit#gid=0"
+          },
+          "options": {}
+        },
+        "name": "Read Target Companies (File 2)",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 3,
+        "position": [
+          0,
+          240
+        ],
+        "id": "564e4bd4-5d7f-4040-a411-90c07a234725"
+      },
+      {
+        "parameters": {
+          "jsCode": "// IMPORTANT: Change \"Company Name\" to the exact column header in your File 1\nconst rawCompanyName = $json[\"Organization\"];\n\nif (rawCompanyName) {\n  // 1. toLowerCase() -> makes everything lowercase\n  // 2. replace() -> uses regex to remove common punctuation and suffixes\n  // 3. trim() -> removes whitespace from start and end\n  $json.normalized_company_name = rawCompanyName\n    .toLowerCase()\n    .replace(/[,.]| inc| ltd| llc/g, \"\")\n    .trim();\n} else {\n  $json.normalized_company_name = null;\n}\n\nreturn $json;"
+        },
+        "name": "Normalize File 1 Names",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 1,
+        "position": [
+          240,
+          0
+        ],
+        "id": "7b7d64b9-15af-4e9d-9cbf-5270ae90e801"
+      },
+      {
+        "parameters": {
+          "jsCode": "// IMPORTANT: Change \"Company Name\" to the exact column header in your File 2\nconst rawCompanyName = $json[\"Company name\"];\n\nif (rawCompanyName) {\n  // 1. toLowerCase() -> makes everything lowercase\n  // 2. replace() -> uses regex to remove common punctuation and suffixes\n  // 3. trim() -> removes whitespace from start and end\n  $json.normalized_company_name = rawCompanyName\n    .toLowerCase()\n    .replace(/[,.]| inc| ltd| llc/g, \"\")\n    .trim();\n} else {\n  $json.normalized_company_name = null;\n}\n\nreturn $json;"
+        },
+        "name": "Normalize File 2 Names",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 1,
+        "position": [
+          240,
+          240
+        ],
+        "id": "a159be17-0962-488f-bcd5-02c2c53dedb4"
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "mergeByFields": {
+            "values": [
+              {
+                "field1": "normalized_company_name",
+                "field2": "normalized_company_name"
+              }
+            ]
+          },
+          "joinMode": "enrichInput1",
+          "options": {}
+        },
+        "name": "Left Join on Normalized Name",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 2,
+        "position": [
+          480,
+          112
+        ],
+        "id": "5fa0e27e-a53c-48a6-9f3b-2b21aafdd96a"
+      },
+      {
+        "parameters": {
+          "operation": "sheetCreate",
+          "documentId": {
+            "__rl": true,
+            "value": "1jm091dNyu74duV3M31O5YY7hbV-mC1Qe6J9YPkLaRn8",
+            "mode": "id"
+          }
+        },
+        "name": "Create Enriched List (File 3)",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 3,
+        "position": [
+          720,
+          112
+        ],
+        "id": "2dabd1ca-ebc5-49e2-80c4-58cb0d0cb8bd"
+      }
+    ],
+    "connections": {
+      "Start": {
+        "main": [
+          [
+            {
+              "node": "Read Master Contacts (File 1)",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Read Target Companies (File 2)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read Master Contacts (File 1)": {
+        "main": [
+          [
+            {
+              "node": "Normalize File 1 Names",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read Target Companies (File 2)": {
+        "main": [
+          [
+            {
+              "node": "Normalize File 2 Names",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize File 1 Names": {
+        "main": [
+          [
+            {
+              "node": "Left Join on Normalized Name",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Normalize File 2 Names": {
+        "main": [
+          [
+            {
+              "node": "Left Join on Normalized Name",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Left Join on Normalized Name": {
+        "main": [
+          [
+            {
+              "node": "Create Enriched List (File 3)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "createdAt": "2025-08-09T23:27:18.469Z",
+    "updatedAt": "2025-08-28T02:35:42.508Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "pinData": {},
+    "versionId": "37207049-5ad7-493c-89fc-e090f29b4554",
+    "triggerCount": 0,
+    "id": "y4UA792pAkAXWpxm",
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "parentFolderId": "WxkLNiYI2I4KBiMN",
+    "isArchived": true
+  },
+  {
+    "name": "BCKP Cleanup on GitHub",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 2 * * 0"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -304,
+          -144
+        ],
+        "id": "b7457c93-4253-4a9b-93a0-5844c1b85f16",
+        "name": "Weekly Cleanup Trigger"
+      },
+      {
+        "parameters": {
+          "resource": "repository",
+          "operation": "listFiles",
+          "owner": {
+            "__rl": true,
+            "value": "paul-z4z",
+            "mode": "name"
+          },
+          "repository": {
+            "__rl": true,
+            "value": "n8n_Workflows",
+            "mode": "name"
+          }
+        },
+        "type": "n8n-nodes-base.github",
+        "typeVersion": 1,
+        "position": [
+          -112,
+          -144
+        ],
+        "id": "0b0d302e-244c-49d7-b164-778ab7e68faf",
+        "name": "List Workflow Folders",
+        "webhookId": "2136706b-f411-4ba4-8b55-90669346ddd1",
+        "credentials": {
+          "githubApi": {
+            "id": "9RWBslDcc6pPEYjG",
+            "name": "GitHub backup"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Process the folder list to identify workflow directories\nconst items = $input.all();\nconst folders = [];\n\nfor (const item of items) {\n  if (item.json.type === 'dir' && item.json.path.startsWith('individual/')) {\n    folders.push({\n      folder_name: item.json.name,\n      folder_path: item.json.path,\n      workflow_name: item.json.name.split('_').slice(0, -1).join('_') // Remove ID suffix\n    });\n  }\n}\n\nreturn folders;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          96,
+          -144
+        ],
+        "id": "eb4d3bc1-d7b6-4e32-9b5f-48b69e0e2822",
+        "name": "Process Folders"
+      },
+      {
+        "parameters": {
+          "resource": "repository",
+          "operation": "listFiles",
+          "owner": {
+            "__rl": true,
+            "value": "paul-z4z",
+            "mode": "name"
+          },
+          "repository": {
+            "__rl": true,
+            "value": "n8n_Workflows",
+            "mode": "name"
+          }
+        },
+        "type": "n8n-nodes-base.github",
+        "typeVersion": 1,
+        "position": [
+          304,
+          -144
+        ],
+        "id": "6ced6806-0d88-4363-afcf-01142cf68b42",
+        "name": "List Files in Each Folder",
+        "webhookId": "ea4d5ef6-f1a3-4259-93ab-36c0cfa7249f",
+        "credentials": {
+          "githubApi": {
+            "id": "9RWBslDcc6pPEYjG",
+            "name": "GitHub backup"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Identify files to delete (keep only latest 3)\nconst items = $input.all();\nconst files = [];\n\n// Filter for JSON files and sort by name (which includes timestamp)\nconst jsonFiles = items\n  .filter(item => item.json.type === 'file' && item.json.name.endsWith('.json'))\n  .sort((a, b) => b.json.name.localeCompare(a.json.name)); // Sort descending (newest first)\n\n// Keep first 3, mark rest for deletion\nconst filesToDelete = jsonFiles.slice(3); // Everything after the first 3\n\nconst results = [];\n\nfor (const file of filesToDelete) {\n  results.push({\n    action: 'delete',\n    file_path: file.json.path,\n    file_name: file.json.name,\n    file_sha: file.json.sha,\n    reason: `Keeping only latest 3 backups, deleting older file`\n  });\n}\n\n// Log summary\nif (results.length > 0) {\n  console.log(`Found ${jsonFiles.length} backup files, will delete ${results.length} oldest files`);\n} else {\n  console.log(`Found ${jsonFiles.length} backup files, no cleanup needed (≤3 files)`);\n}\n\nreturn results;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          496,
+          -144
+        ],
+        "id": "6bff9923-7ede-4cc4-a7a4-1cf6e4628155",
+        "name": "Identify Files to Delete"
+      },
+      {
+        "parameters": {
+          "resource": "file",
+          "operation": "delete",
+          "owner": {
+            "__rl": true,
+            "value": "paul-z4z",
+            "mode": "name"
+          },
+          "repository": {
+            "__rl": true,
+            "value": "n8n_Workflows",
+            "mode": "name"
+          },
+          "filePath": "={{ $json.file_path }}",
+          "commitMessage": "Cleanup: Remove old backup - {{ $json.file_name }}"
+        },
+        "type": "n8n-nodes-base.github",
+        "typeVersion": 1,
+        "position": [
+          704,
+          -144
+        ],
+        "id": "33479130-2500-45c4-9f18-260de9389d18",
+        "name": "Delete Old Files",
+        "webhookId": "2944fa06-b756-47a7-9b50-beeb2ff9b4aa",
+        "credentials": {
+          "githubApi": {
+            "id": "9RWBslDcc6pPEYjG",
+            "name": "GitHub backup"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Cleanup summary\nconst items = $input.all();\nconst successfulDeletions = items.filter(item => item.json.commit).length;\nconst totalAttempted = items.length;\n\nconst summary = {\n  cleanup_completed: true,\n  timestamp: new Date().toISOString(),\n  files_deleted: successfulDeletions,\n  deletion_attempts: totalAttempted,\n  message: `Cleanup completed: ${successfulDeletions}/${totalAttempted} old backup files removed`\n};\n\nconsole.log(summary.message);\n\nreturn [summary];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          896,
+          -144
+        ],
+        "id": "5eb3f48b-5bcb-4e09-b329-403602955a8c",
+        "name": "Cleanup Summary"
+      }
+    ],
+    "connections": {
+      "Weekly Cleanup Trigger": {
+        "main": [
+          [
+            {
+              "node": "List Workflow Folders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "List Workflow Folders": {
+        "main": [
+          [
+            {
+              "node": "Process Folders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Process Folders": {
+        "main": [
+          [
+            {
+              "node": "List Files in Each Folder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "List Files in Each Folder": {
+        "main": [
+          [
+            {
+              "node": "Identify Files to Delete",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Identify Files to Delete": {
+        "main": [
+          [
+            {
+              "node": "Delete Old Files",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Delete Old Files": {
+        "main": [
+          [
+            {
+              "node": "Cleanup Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "createdAt": "2025-08-26T00:50:40.400Z",
+    "updatedAt": "2025-08-28T02:34:24.976Z",
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": {
+      "node:Weekly Cleanup Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "pinData": {},
+    "versionId": "2322d12d-8c0d-42e8-8a27-114186f2d1a1",
+    "triggerCount": 1,
+    "id": "Zqr7a6tyY88sT4pv",
+    "meta": null,
+    "parentFolderId": null,
+    "isArchived": false
+  }
+]
