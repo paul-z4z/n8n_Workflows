@@ -1,0 +1,245 @@
+{
+  "name": "BCKP Cleanup on GitHub",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * 0"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -304,
+        -144
+      ],
+      "id": "b7457c93-4253-4a9b-93a0-5844c1b85f16",
+      "name": "Weekly Cleanup Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "repository",
+        "operation": "listFiles",
+        "owner": {
+          "__rl": true,
+          "value": "paul-z4z",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "n8n_Workflows",
+          "mode": "name"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -144
+      ],
+      "id": "0b0d302e-244c-49d7-b164-778ab7e68faf",
+      "name": "List Workflow Folders",
+      "webhookId": "2136706b-f411-4ba4-8b55-90669346ddd1",
+      "credentials": {
+        "githubApi": {
+          "id": "9RWBslDcc6pPEYjG",
+          "name": "GitHub backup"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process the folder list to identify workflow directories\nconst items = $input.all();\nconst folders = [];\n\nfor (const item of items) {\n  if (item.json.type === 'dir' && item.json.path.startsWith('individual/')) {\n    folders.push({\n      folder_name: item.json.name,\n      folder_path: item.json.path,\n      workflow_name: item.json.name.split('_').slice(0, -1).join('_') // Remove ID suffix\n    });\n  }\n}\n\nreturn folders;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -144
+      ],
+      "id": "eb4d3bc1-d7b6-4e32-9b5f-48b69e0e2822",
+      "name": "Process Folders"
+    },
+    {
+      "parameters": {
+        "resource": "repository",
+        "operation": "listFiles",
+        "owner": {
+          "__rl": true,
+          "value": "paul-z4z",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "n8n_Workflows",
+          "mode": "name"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        304,
+        -144
+      ],
+      "id": "6ced6806-0d88-4363-afcf-01142cf68b42",
+      "name": "List Files in Each Folder",
+      "webhookId": "ea4d5ef6-f1a3-4259-93ab-36c0cfa7249f",
+      "credentials": {
+        "githubApi": {
+          "id": "9RWBslDcc6pPEYjG",
+          "name": "GitHub backup"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Identify files to delete (keep only latest 3)\nconst items = $input.all();\nconst files = [];\n\n// Filter for JSON files and sort by name (which includes timestamp)\nconst jsonFiles = items\n  .filter(item => item.json.type === 'file' && item.json.name.endsWith('.json'))\n  .sort((a, b) => b.json.name.localeCompare(a.json.name)); // Sort descending (newest first)\n\n// Keep first 3, mark rest for deletion\nconst filesToDelete = jsonFiles.slice(3); // Everything after the first 3\n\nconst results = [];\n\nfor (const file of filesToDelete) {\n  results.push({\n    action: 'delete',\n    file_path: file.json.path,\n    file_name: file.json.name,\n    file_sha: file.json.sha,\n    reason: `Keeping only latest 3 backups, deleting older file`\n  });\n}\n\n// Log summary\nif (results.length > 0) {\n  console.log(`Found ${jsonFiles.length} backup files, will delete ${results.length} oldest files`);\n} else {\n  console.log(`Found ${jsonFiles.length} backup files, no cleanup needed (≤3 files)`);\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        -144
+      ],
+      "id": "6bff9923-7ede-4cc4-a7a4-1cf6e4628155",
+      "name": "Identify Files to Delete"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "delete",
+        "owner": {
+          "__rl": true,
+          "value": "paul-z4z",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "n8n_Workflows",
+          "mode": "name"
+        },
+        "filePath": "={{ $json.file_path }}",
+        "commitMessage": "Cleanup: Remove old backup - {{ $json.file_name }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        704,
+        -144
+      ],
+      "id": "33479130-2500-45c4-9f18-260de9389d18",
+      "name": "Delete Old Files",
+      "webhookId": "2944fa06-b756-47a7-9b50-beeb2ff9b4aa",
+      "credentials": {
+        "githubApi": {
+          "id": "9RWBslDcc6pPEYjG",
+          "name": "GitHub backup"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Cleanup summary\nconst items = $input.all();\nconst successfulDeletions = items.filter(item => item.json.commit).length;\nconst totalAttempted = items.length;\n\nconst summary = {\n  cleanup_completed: true,\n  timestamp: new Date().toISOString(),\n  files_deleted: successfulDeletions,\n  deletion_attempts: totalAttempted,\n  message: `Cleanup completed: ${successfulDeletions}/${totalAttempted} old backup files removed`\n};\n\nconsole.log(summary.message);\n\nreturn [summary];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -144
+      ],
+      "id": "5eb3f48b-5bcb-4e09-b329-403602955a8c",
+      "name": "Cleanup Summary"
+    }
+  ],
+  "connections": {
+    "Weekly Cleanup Trigger": {
+      "main": [
+        [
+          {
+            "node": "List Workflow Folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Workflow Folders": {
+      "main": [
+        [
+          {
+            "node": "Process Folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Folders": {
+      "main": [
+        [
+          {
+            "node": "List Files in Each Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Files in Each Folder": {
+      "main": [
+        [
+          {
+            "node": "Identify Files to Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify Files to Delete": {
+      "main": [
+        [
+          {
+            "node": "Delete Old Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Old Files": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-08-26T00:50:40.400Z",
+  "updatedAt": "2025-08-28T02:34:24.976Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Weekly Cleanup Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "pinData": {},
+  "versionId": "2322d12d-8c0d-42e8-8a27-114186f2d1a1",
+  "triggerCount": 1,
+  "id": "Zqr7a6tyY88sT4pv",
+  "meta": null,
+  "parentFolderId": null,
+  "isArchived": false
+}
