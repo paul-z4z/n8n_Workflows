@@ -1,0 +1,152 @@
+{
+  "name": "BCKP workflows n8n to GitHub",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM workflow_entity\nWHERE name NOT ILIKE '%backup%'\nORDER BY id;",
+        "additionalFields": {}
+      },
+      "name": "Get Workflows from DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        224
+      ],
+      "id": "619dae1f-ee40-4904-97a5-cad13c8779db",
+      "credentials": {
+        "postgres": {
+          "id": "2xkaCrgCVOfCETb3",
+          "name": "PostgreSQL credential n8n_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const workflows = items.map(item => item.json);\nconst timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);\n\nconst files = workflows.flatMap(workflow => {\n  const cleanName = workflow.name.replace(/[^a-zA-Z0-9]/g, '_');\n  const workflowId = workflow.id;\n  const workflowJson = JSON.stringify(workflow, null, 2);\n\n  return [\n    {\n      path: `individual/${cleanName}_${workflowId}/${cleanName}_${timestamp}.json`,\n      content: Buffer.from(workflowJson).toString('base64'),\n      message: `Backup ${cleanName} (${workflowId}) at ${timestamp}`\n    }\n  ];\n});\n\n// Add combined timestamped file\nconst allWorkflowsJson = JSON.stringify(workflows, null, 2);\nfiles.push({\n  path: `all_workflows/all_workflows_${timestamp}.json`,\n  content: Buffer.from(allWorkflowsJson).toString('base64'),\n  message: `Full backup of all workflows at ${timestamp}`\n});\n\nreturn files.map(file => ({ json: file }));"
+      },
+      "name": "Generate File Paths",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        224
+      ],
+      "id": "30ec09ef-33ca-4e86-b781-59b499177267"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "value": "paul-z4z",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "n8n_Workflows",
+          "mode": "name"
+        },
+        "filePath": "={{ $json.path }}",
+        "fileContent": "={{ $json.content }}",
+        "commitMessage": "={{ $json.message }}"
+      },
+      "name": "Upload to GitHub",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        80,
+        224
+      ],
+      "id": "e14e803b-841e-460b-b477-7a4bbd448d3b",
+      "webhookId": "09d821d4-6a0a-4991-be00-6a2ec5dff456",
+      "credentials": {
+        "githubApi": {
+          "id": "9RWBslDcc6pPEYjG",
+          "name": "GitHub backup"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -640,
+        224
+      ],
+      "id": "e1b95e1b-aef9-4180-bb73-e6d5f7a09a3a",
+      "name": "Weekly Cleanup Trigger"
+    }
+  ],
+  "connections": {
+    "Get Workflows from DB": {
+      "main": [
+        [
+          {
+            "node": "Generate File Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate File Paths": {
+      "main": [
+        [
+          {
+            "node": "Upload to GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to GitHub": {
+      "main": [
+        []
+      ]
+    },
+    "Weekly Cleanup Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Workflows from DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-08-26T17:42:18.102Z",
+  "updatedAt": "2025-08-28T22:12:39.119Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Weekly Cleanup Trigger": {
+      "recurrenceRules": [
+        16
+      ]
+    }
+  },
+  "pinData": {},
+  "versionId": "8211e8d5-a98e-47c2-8bda-b26126c8048a",
+  "triggerCount": 1,
+  "id": "4PfmBxWJsJcMqQ9F",
+  "meta": null,
+  "parentFolderId": null,
+  "isArchived": false
+}
