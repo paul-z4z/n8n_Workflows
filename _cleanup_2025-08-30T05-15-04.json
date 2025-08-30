@@ -1,0 +1,19 @@
+{
+  "backup_timestamp": "2025-08-30T05-15-04",
+  "workflow_names": [
+    "bckpworkflowsn8ntogithub",
+    "agenttoretrievepersonaldata",
+    "linkedinclaudefortest",
+    "templatecreatepostsforlinkedin",
+    "test_searchbusinesscase",
+    "myworkflow",
+    "personalassistant",
+    "linkedincontent_n8n",
+    "bckp2",
+    "synccallpdcal939",
+    "raginjection",
+    "draft_planbweeklycleanupongithub"
+  ],
+  "files_deleted": 0,
+  "retention_count": 5
+}
