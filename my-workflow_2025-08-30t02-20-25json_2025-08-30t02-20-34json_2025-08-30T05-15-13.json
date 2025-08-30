@@ -1,0 +1,16 @@
+{
+  "name": "my-workflow_2025-08-30t02-20-25json_2025-08-30T02-20-34.json",
+  "path": "my-workflow_2025-08-30t02-20-25json_2025-08-30T02-20-34.json",
+  "sha": "f9af4a3d1d7d30ce937cbd5b5938dd1e99282681",
+  "size": 1013,
+  "url": "https://api.github.com/repos/paul-z4z/n8n_Workflows/contents/my-workflow_2025-08-30t02-20-25json_2025-08-30T02-20-34.json?ref=main",
+  "html_url": "https://github.com/paul-z4z/n8n_Workflows/blob/main/my-workflow_2025-08-30t02-20-25json_2025-08-30T02-20-34.json",
+  "git_url": "https://api.github.com/repos/paul-z4z/n8n_Workflows/git/blobs/f9af4a3d1d7d30ce937cbd5b5938dd1e99282681",
+  "download_url": "https://raw.githubusercontent.com/paul-z4z/n8n_Workflows/main/my-workflow_2025-08-30t02-20-25json_2025-08-30T02-20-34.json",
+  "type": "file",
+  "_links": {
+    "self": "https://api.github.com/repos/paul-z4z/n8n_Workflows/contents/my-workflow_2025-08-30t02-20-25json_2025-08-30T02-20-34.json?ref=main",
+    "git": "https://api.github.com/repos/paul-z4z/n8n_Workflows/git/blobs/f9af4a3d1d7d30ce937cbd5b5938dd1e99282681",
+    "html": "https://github.com/paul-z4z/n8n_Workflows/blob/main/my-workflow_2025-08-30t02-20-25json_2025-08-30T02-20-34.json"
+  }
+}
