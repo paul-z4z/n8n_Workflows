@@ -1,0 +1,16 @@
+{
+  "name": "test_search-business-case_2025-08-30t02-08-33json_2025-08-30T02-20-34.json",
+  "path": "test_search-business-case_2025-08-30t02-08-33json_2025-08-30T02-20-34.json",
+  "sha": "f055251a4a2ee53eec47cab73361972cfc2212e2",
+  "size": 1112,
+  "url": "https://api.github.com/repos/paul-z4z/n8n_Workflows/contents/test_search-business-case_2025-08-30t02-08-33json_2025-08-30T02-20-34.json?ref=main",
+  "html_url": "https://github.com/paul-z4z/n8n_Workflows/blob/main/test_search-business-case_2025-08-30t02-08-33json_2025-08-30T02-20-34.json",
+  "git_url": "https://api.github.com/repos/paul-z4z/n8n_Workflows/git/blobs/f055251a4a2ee53eec47cab73361972cfc2212e2",
+  "download_url": "https://raw.githubusercontent.com/paul-z4z/n8n_Workflows/main/test_search-business-case_2025-08-30t02-08-33json_2025-08-30T02-20-34.json",
+  "type": "file",
+  "_links": {
+    "self": "https://api.github.com/repos/paul-z4z/n8n_Workflows/contents/test_search-business-case_2025-08-30t02-08-33json_2025-08-30T02-20-34.json?ref=main",
+    "git": "https://api.github.com/repos/paul-z4z/n8n_Workflows/git/blobs/f055251a4a2ee53eec47cab73361972cfc2212e2",
+    "html": "https://github.com/paul-z4z/n8n_Workflows/blob/main/test_search-business-case_2025-08-30t02-08-33json_2025-08-30T02-20-34.json"
+  }
+}
