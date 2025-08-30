@@ -1,0 +1,16 @@
+{
+  "name": "bckp-2_2025-08-30t02-11-42json_2025-08-30T02-20-34.json",
+  "path": "bckp-2_2025-08-30t02-11-42json_2025-08-30T02-20-34.json",
+  "sha": "d5e448e6ddd82cee21bedc36be5817fe206aae45",
+  "size": 980,
+  "url": "https://api.github.com/repos/paul-z4z/n8n_Workflows/contents/bckp-2_2025-08-30t02-11-42json_2025-08-30T02-20-34.json?ref=main",
+  "html_url": "https://github.com/paul-z4z/n8n_Workflows/blob/main/bckp-2_2025-08-30t02-11-42json_2025-08-30T02-20-34.json",
+  "git_url": "https://api.github.com/repos/paul-z4z/n8n_Workflows/git/blobs/d5e448e6ddd82cee21bedc36be5817fe206aae45",
+  "download_url": "https://raw.githubusercontent.com/paul-z4z/n8n_Workflows/main/bckp-2_2025-08-30t02-11-42json_2025-08-30T02-20-34.json",
+  "type": "file",
+  "_links": {
+    "self": "https://api.github.com/repos/paul-z4z/n8n_Workflows/contents/bckp-2_2025-08-30t02-11-42json_2025-08-30T02-20-34.json?ref=main",
+    "git": "https://api.github.com/repos/paul-z4z/n8n_Workflows/git/blobs/d5e448e6ddd82cee21bedc36be5817fe206aae45",
+    "html": "https://github.com/paul-z4z/n8n_Workflows/blob/main/bckp-2_2025-08-30t02-11-42json_2025-08-30T02-20-34.json"
+  }
+}
