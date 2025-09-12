@@ -1,0 +1,249 @@
+{
+  "name": "RAG injection",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a084f90a-ae3e-4874-a4b9-448055e62d74",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/data/personal_data.csv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f5a85edd-f66d-46cf-a7fe-8a8526382956",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "options": {
+          "delimiter": ",",
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "361450bf-e6a1-44a3-88fb-bb3acc9881dc",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconsole.log('Number of items:', items.length);\nconsole.log('First item:', items[0]);\n\n// Return items with additional debug info\nreturn items.map((item, index) => ({\n  json: {\n    ...item.json,\n    debug_index: index,\n    debug_total: items.length\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "e859ecd8-4a64-4c8e-bddd-580e3002c717",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst processedItems = [];\n\nfor (const item of items) {\n  const row = item.json;\n  \n  // Clean and structure data\n  const cleanedItem = {\n    category: row.category.trim(),\n    title: row.title.trim(), \n    content: row.content.trim(),\n    tags: row.tags ? row.tags.split(';').map(tag => tag.trim()) : [],\n    is_sensitive: row.is_sensitive === 'true',\n    source_row: processedItems.length + 1\n  };\n  \n  processedItems.push(cleanedItem);\n}\n\nconsole.log(`Processed ${processedItems.length} items`);\nreturn processedItems.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "8797bbca-8f20-47cc-872c-8b00bf500e7f",
+      "name": "Validate data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst chunks = [];\nconst CHUNK_SIZE = 400;\nconst OVERLAP_SIZE = 50;\n\nfunction createChunks(text, metadata) {\n  if (text.length <= CHUNK_SIZE) {\n    return [{\n      text: text,\n      chunk_index: 0,\n      total_chunks: 1,\n      ...metadata\n    }];\n  }\n  \n  const textChunks = [];\n  let start = 0;\n  let chunkIndex = 0;\n  \n  while (start < text.length) {\n    let end = Math.min(start + CHUNK_SIZE, text.length);\n    const chunkText = text.slice(start, end).trim();\n    \n    if (chunkText.length > 0) {\n      textChunks.push({\n        text: chunkText,\n        chunk_index: chunkIndex,\n        total_chunks: 0,\n        ...metadata\n      });\n      chunkIndex++;\n    }\n    \n    start = Math.max(end - OVERLAP_SIZE, start + 1);\n  }\n  \n  textChunks.forEach(chunk => chunk.total_chunks = textChunks.length);\n  return textChunks;\n}\n\nfor (const item of items) {\n  const data = item.json;\n  const chunkList = createChunks(data.content, {\n    category: data.category,\n    title: data.title,\n    tags: data.tags,\n    is_sensitive: data.is_sensitive,\n    source_row: data.source_row\n  });\n  \n  chunks.push(...chunkList);\n}\n\nconsole.log(`Created ${chunks.length} chunks from ${items.length} documents`);\nreturn chunks.map(chunk => ({ json: chunk }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "5b5c61b8-23e2-4c78-ad97-1f8b32128bda",
+      "name": "Create chanks"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/embeddings",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"nomic-embed-text\",\n  \"prompt\": \"{{ $json.text }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "98d6dc37-32eb-48e4-bb7d-bb5bcb271dba",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO personal_data (category, title, data_json, embedding) \nVALUES (\n  '{{ $json.category }}',\n  '{{ $json.title }}', \n  '{{ JSON.stringify($json) }}'::jsonb,\n  '{{ JSON.stringify($json.embedding) }}'::vector(768)\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1456,
+        0
+      ],
+      "id": "2bd91ed2-0b28-4f9a-becf-f9c6aa16420e",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "rXPx9j8n3ZWFPZ95",
+          "name": "PostgreSQL credentials personal_assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data from HTTP Request\nconst httpResponse = $input.first().json;\n\n// Get the original chunk data from the workflow\nconst originalItem = $input.first();\n\nconsole.log('HTTP Response embedding length:', httpResponse.embedding?.length);\nconsole.log('Original item keys:', Object.keys(originalItem.json));\n\n// The HTTP Request should pass through the original data\n// Let's see what we actually have\nreturn [{\n  json: {\n    category: originalItem.json.category || 'test_category',\n    title: originalItem.json.title || 'test_title',\n    text: originalItem.json.text || 'test_text',\n    tags: originalItem.json.tags || ['test'],\n    is_sensitive: originalItem.json.is_sensitive || false,\n    embedding: httpResponse.embedding\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        272
+      ],
+      "id": "17fc9b28-f06f-4ec0-b553-0461336f8aa7",
+      "name": "Debug"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Validate data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate data": {
+      "main": [
+        [
+          {
+            "node": "Create chanks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create chanks": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Debug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debug": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-09-10T17:55:42.556Z",
+  "updatedAt": "2025-09-10T21:52:51.501Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "e299277a-5172-4b6d-aaa2-28b6e737b736",
+  "triggerCount": 0,
+  "id": "IEgSmASkarMUAgn3",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}
