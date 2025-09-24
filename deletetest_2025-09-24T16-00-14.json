@@ -1,0 +1,21 @@
+{
+  "name": "delete test",
+  "active": false,
+  "nodes": [],
+  "connections": {},
+  "createdAt": "2025-09-20T22:12:55.447Z",
+  "updatedAt": "2025-09-20T22:12:55.447Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "c9925ade-2891-46c1-8cac-3ae71b90294b",
+  "triggerCount": 0,
+  "id": "WVTtlhCLcF661HZB",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}
