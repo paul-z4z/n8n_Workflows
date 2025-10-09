@@ -1,0 +1,45 @@
+{
+  "name": "My workflow",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -16
+      ],
+      "id": "0107e3f6-7ea6-4759-86ad-f778ed873ab2",
+      "name": "WhatsApp Trigger",
+      "webhookId": "4e67b215-b7af-4720-b38f-912b0f275204",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "bkFwxzEPiowUqxeD",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    }
+  ],
+  "connections": {},
+  "createdAt": "2025-10-03T23:27:53.366Z",
+  "updatedAt": "2025-10-03T23:28:16.524Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "2b4df612-103b-43c1-be92-dc19ad7f4259",
+  "triggerCount": 0,
+  "id": "V64PM549wGKB4Ri6",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "isArchived": true
+}
