@@ -1,0 +1,20 @@
+{
+  "name": "MTest 1",
+  "active": false,
+  "nodes": [],
+  "connections": {},
+  "createdAt": "2025-10-09T23:29:34.068Z",
+  "updatedAt": "2025-11-07T21:02:44.528Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "356e204e-1c82-4f3d-95f1-52e5f93cf807",
+  "triggerCount": 0,
+  "id": "1ILTU2sYmMlW0imj",
+  "meta": null,
+  "parentFolderId": null,
+  "isArchived": true,
+  "versionCounter": 2
+}
