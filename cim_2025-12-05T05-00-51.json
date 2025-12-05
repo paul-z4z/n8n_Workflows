@@ -1,0 +1,499 @@
+{
+  "name": "CIM",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Demographics Research Specialist.\n\nLocation: {{ $json.address }}\nBusiness Type: {{ $json.businessType }}\n\nYour task:\n1. Research the local area demographics:\n   - Population density\n   - Age distribution\n   - Income levels\n   - Household composition\n2. Analyze foot traffic patterns\n3. Identify target customer segments\n4. Assess location viability for this business type\n\nProvide a concise demographics and foot traffic analysis.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -576,
+        720
+      ],
+      "id": "4f4f0377-4a1c-439f-8ca0-b48aebfead05",
+      "name": "Demographics Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Reputation Analysis Specialist.\n\nBusiness Details:\nName: {{ $json.businessName }}\nType: {{ $json.businessType }}\nAddress: {{ $json.address }}\n\nYour task:\n1. Search for online reviews on:\n   - Google Maps\n   - Yelp\n   - Facebook\n   - Industry-specific platforms\n2. Analyze:\n   - Overall ratings and sentiment\n   - Common praise points\n   - Common complaints\n   - Response to reviews\n3. Assess online presence (website, social media)\n\nProvide a concise reputation and online presence analysis.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -608,
+        944
+      ],
+      "id": "3b9b65ca-48e7-4cd4-a102-64d81bafa594",
+      "name": "Reviews & Reputation Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Market Trends Analyst.\n\nBusiness Type: {{ $json.businessType }}\nLocation: {{ $json.address }}\n\nYour task:\n1. Research current industry trends for {{ $json.businessType }}\n2. Analyze local market conditions:\n   - Growth or decline in this sector\n   - Consumer behavior trends\n   - Seasonal patterns\n   - Economic factors affecting the industry\n3. Identify opportunities and threats\n4. Provide market outlook\n\nProvide a concise market trends and conditions analysis.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -544,
+        1216
+      ],
+      "id": "c84a992e-ffd8-451b-9b62-f1ffe7189421",
+      "name": "Market Trends Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate all research findings\nconst items = $input.all();\n\nconst research = {\n  competitorAnalysis: items[0]?.json?.output || 'No data',\n  demographics: items[1]?.json?.output || 'No data',\n  reputation: items[2]?.json?.output || 'No data',\n  marketTrends: items[3]?.json?.output || 'No data',\n  businessDetails: $('Extract Business Details Agent').item.json\n};\n\nreturn [{ json: research }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        464
+      ],
+      "id": "167f5ed1-aa2b-4ef1-93a9-205c6cc90df5",
+      "name": "Aggregate Research Data"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -864,
+        416
+      ],
+      "id": "bda6c7c0-2dbc-47d7-8345-9d23d90758e9",
+      "name": "LLM1",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -752,
+        816
+      ],
+      "id": "f6432106-187e-4ffe-8f8a-3a33ef0f8528",
+      "name": "LLM2",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -848,
+        992
+      ],
+      "id": "1e45c1d8-481a-4822-8026-abdb4a9f750b",
+      "name": "LLM3",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -848,
+        1328
+      ],
+      "id": "5c76e562-173c-4edf-912a-26d1f8d01b87",
+      "name": "LLM4",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload ML Lisitng",
+        "formDescription": "Uplod listing information",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "data",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -1936,
+        448
+      ],
+      "id": "2e483e20-5398-4fa9-83ff-155ee367e333",
+      "name": "submission1",
+      "webhookId": "f4272f0d-6426-4d8e-949a-32e84b9fb7be"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1728,
+        448
+      ],
+      "id": "3855caa3-4c87-4f98-98fe-551c897bd8b8",
+      "name": "Extract1"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search internet by the company name and address to define the business type ",
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        560
+      ],
+      "id": "6d759917-6ed4-4172-b668-1473e0f0ebc8",
+      "name": "Tavily",
+      "credentials": {
+        "tavilyApi": {
+          "id": "oqdSWHxM8aQ5uKiO",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract these fields from the listing document and return ONLY valid JSON with no markdown formatting:\n\nDocument text:\n{{ $json.text }}\n\nExtract:\n- businessName (string)\n- address (string)\n- businessType (string)\n- agentName (string)\n- agentWeb (string)\n- agentEmail (string)\n- agentPhone (string)\n- agentNote (string)\n\nIf the business type is not defined or generic, e.g. Business, Retail, etc., use the tool Tevily to define the BusinessType. \n\nReturn format:\n{\n  \"businessInfo\": {\n    \"businessName\": \"\",\n    \"businessType\": \"\",\n    \"leasedSpace\": \"\",\n    \"parkingSpace\": \"\"\n  },\n  \"locationInfo\": {\n    \"address\": \"\"\n  },\n  \"agentInfo\": {\n    \"agentName\": \"\",\n    \"agentWeb\": \"\",\n    \"agentEmail\": \"\",\n    \"agentPhone\": \"\"\n  },\n  \"additionalInfo\": {\n    \"agentNote\": \"\"\n  }\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1520,
+        448
+      ],
+      "id": "dd1644a6-4af3-43e2-9795-250fbe9c9a0d",
+      "name": "Parse_Listing"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Competitor Analysis Specialist.\n\nBusiness Details:\nName: {{ $json.output.businessInfo.businessName }}\nType: {{ $json.output.businessInfo.businessType }}\nAddress:{{ $json.output.locationInfo.address }}\n\nYour task:\n1. Search for similar businesses within 5km radius\n2. Identify top 3-5 direct competitors\n3. Analyze their services, online presence, market positioning, strengths and weaknesses\n\nYour tools:\nUse the tool Tavily to search for information. \n\nCRITICAL: Return ONLY valid JSON with no additional text, explanations, or markdown. Do not include ```json or any other formatting. Start with { and end with }.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -864,
+        256
+      ],
+      "id": "aac56434-c104-4808-8cae-cbf4a8bc9196",
+      "name": "Competitors"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"parameters\": {\n    \"language\": \"python\",\n    \"pythonCode\": \"import json\\n\\n# Get the raw output\\nraw_output = _input.item.json['output']\\n\\n# Parse the JSON string\\ndata = json.loads(raw_output)\\n\\n# Return with proper item linking\\nreturn {'json': data}\"\n  },\n  \"type\": \"n8n-nodes-base.code\",\n  \"typeVersion\": 2,\n  \"position\": [-900, 448],\n  \"id\": \"parse-json-code\",\n  \"name\": \"Parse JSON\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -1296,
+        672
+      ],
+      "id": "b2492af7-fd28-4c4b-ade6-ee9f5af28dd0",
+      "name": "Parser0"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o4-mini",
+          "mode": "list",
+          "cachedResultName": "o4-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1600,
+        608
+      ],
+      "id": "84eec9cd-cb6a-4332-ba64-0776ddaa9c5c",
+      "name": "LLM_Parse",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import json\nimport re\n\n# Get the raw output\nraw_text = _input.item.json.get('output', '')\n\n# Try to extract JSON from the response\n# Remove markdown code blocks if present\nraw_text = re.sub(r'```json\\s*', '', raw_text)\nraw_text = re.sub(r'```\\s*$', '', raw_text)\n\n# Find the first { and last }\ntry:\n    start = raw_text.index('{')\n    end = raw_text.rindex('}') + 1\n    json_str = raw_text[start:end]\n    \n    # Parse the JSON\n    data = json.loads(json_str)\n    \n    return {'json': data}\nexcept Exception as e:\n    # If parsing fails, return raw text\n    return {'json': {'error': str(e), 'raw_output': raw_text}}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        256
+      ],
+      "id": "5322f9ec-0108-43d9-bb99-8b475d0eaea8",
+      "name": "Code"
+    }
+  ],
+  "connections": {
+    "Demographics Agent": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Research Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reviews & Reputation Agent": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Research Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Market Trends Agent": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Research Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Competitors",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Demographics Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Reviews & Reputation Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Market Trends Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "submission1": {
+      "main": [
+        [
+          {
+            "node": "Extract1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract1": {
+      "main": [
+        [
+          {
+            "node": "Parse_Listing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "Parse_Listing",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Competitors",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse_Listing": {
+      "main": [
+        [
+          {
+            "node": "Competitors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Competitors": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser0": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Parse_Listing",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM_Parse": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Parse_Listing",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Research Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-11-29T00:52:00.228Z",
+  "updatedAt": "2025-12-05T00:47:20.133Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "0f925b23-0bd1-4567-aa71-b6556763df1c",
+  "triggerCount": 0,
+  "id": "cELwbAj2sd00DqU9",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "isArchived": false,
+  "versionCounter": 31,
+  "description": null
+}
