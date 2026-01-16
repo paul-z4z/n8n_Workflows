@@ -1,0 +1,294 @@
+{
+  "name": "my_test_CN internal chat",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -512,
+        80
+      ],
+      "id": "ced1fba6-9613-4081-bdb9-0c762e3cdbb5",
+      "name": "Telegram Trigger",
+      "webhookId": "fa960784-717f-4d01-a39a-bf9a54f23711",
+      "credentials": {
+        "telegramApi": {
+          "id": "s0r2nKJcTTTNeDuC",
+          "name": "Telegram n8n_pilot_bot (@n8n_fly_bot)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.cleanText }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        0
+      ],
+      "id": "0149d427-7bbc-4ea6-abf6-970991563a56",
+      "name": "Send a text message",
+      "webhookId": "c8259e38-1646-4350-b0d0-8cb41e4fb96e",
+      "credentials": {
+        "telegramApi": {
+          "id": "s0r2nKJcTTTNeDuC",
+          "name": "Telegram n8n_pilot_bot (@n8n_fly_bot)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4024faed-ee65-47ad-9155-4a926fdc07d1",
+              "name": "cleanText",
+              "value": "={{ $json.output.split('\\n').filter(line => !line.includes('ROUTE:')).join('\\n').replace(/[*_\\[\\](){}]/g, '') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "222dfc26-0979-451d-b85e-0ce24f7d94a0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -336,
+        240
+      ],
+      "id": "0a9c0af9-d0fc-47ca-92ac-4424b0ff331b",
+      "name": "LLM",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "timezone": "America/Los_Angeles"
+        }
+      },
+      "type": "n8n-nodes-base.dateTimeTool",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        288
+      ],
+      "id": "7f0697e2-b0c4-437c-a9ca-269315fad843",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a master AI orchestrator. Analyze user requests and determine the appropriate route:\n\n**For date and time send a request to your tool Date & Time\n\n**For public/general information (weather, facts, calculations, general knowledge):**\nRespond directly with helpful information.\n\n\n\n**For private/personal information (calendar, email, files, personal data):**\nUse the GoogleTools with these parameters:\n- userRequest: The exact user request\n- chatId: The chat ID from the Telegram message  \n- messageId: The message ID\n\n### Examples:\n\nUser: \"What's the weather like?\"\n→ Respond directly with weather information\n\nUser: \"Check my calendar for today\"  \n→ Use GoogleTools with userRequest=\"Check my calendar for today\"\n\nUser: \"Send an email to John\"\n→ Use GoogleTools with userRequest=\"Send an email to John\"\n\nYou are a master AI orchestrator. For personal/private requests (calendar, email, files), use GoogleTools with the user's query.\n\nWhen using GoogleTools, call it like this:\nGoogleTools(query=\"user's exact request\", chatId=\"chat_id\", messageContext=\"any additional context\")\n\nExamples:\n- User: \"What events do I have today?\" → GoogleTools(query=\"What events do I have today?\", chatId=\"123\")\n- User: \"Check my emails\" → GoogleTools(query=\"Check my emails\", chatId=\"123\") \n- User: \"What's the weather?\" → Respond directly (no tool needed)\n\nCurrent user request: {{ $('Telegram Trigger').item.json.message.text }}\nChat ID: {{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        32
+      ],
+      "id": "e069932e-6d27-4fa2-9a64-e24a7f50675d",
+      "name": "CN Master Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        256
+      ],
+      "id": "25820bfa-f6be-4395-81d0-e1709c6224eb",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search through CNWC company documents including meeting notes, policies, and business documents. Use this when the user asks about CNWC information, company details, or anything related to documents that have been uploaded. The company is also known as Code Ninjas.",
+        "tableName": "document_embeddings",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        224
+      ],
+      "id": "00c03c73-eb0a-4e17-9908-dd958d567631",
+      "name": "CNWC PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "7R7pU7OMG9rLAodz",
+          "name": "CNWC_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        80,
+        368
+      ],
+      "id": "fb556de2-43e5-4c0e-aedb-8c8c3ca9f163",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "eWPVdQz9AJTOV0V4",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "CN Master Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CN Master Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "ai_tool": [
+        [
+          {
+            "node": "CN Master Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CN Master Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "CN Master Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CNWC PGVector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "CN Master Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "CNWC PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-10-01T01:59:13.769Z",
+  "updatedAt": "2025-11-05T22:40:54.577Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "25a4b66c-4545-4fe9-b58e-4731c55ac9dc",
+  "triggerCount": 1,
+  "id": "SHAVTYS0F4proAKE",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": "Tj9st8nLcUxlvAXe",
+  "isArchived": false,
+  "versionCounter": 2,
+  "description": null,
+  "activeVersionId": null
+}
