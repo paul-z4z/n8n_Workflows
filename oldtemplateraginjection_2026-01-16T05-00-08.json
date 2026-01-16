@@ -1,0 +1,178 @@
+{
+  "name": "old_template_RAG injection",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cc00169d-17a1-4acd-afb1-e17c81c9690b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/data/doc_form_1.csv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "be68f0bc-1844-42c1-ad4a-167fa10ab1c7",
+      "name": "Read/Write Files from Disk",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e86b8b0e-eda1-4a66-8789-7ea1d9720e41",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/embeddings",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"model\": \"nomic-embed-text\", \n  \"prompt\": \"{{ $('Code1').first().json.content }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "5dbf3640-0b6b-4349-b784-634a77a26e25",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO personal_data (category, content, metadata, source, embedding) \nVALUES (\n  '{{ $(\"Code1\").first().json.category }}',\n  '{{ $(\"Code1\").first().json.content }}',\n  '{{ $(\"Code1\").first().json.metadata }}'::jsonb,\n  '{{ $(\"Code1\").first().json.source }}',\n  '{{ JSON.stringify($(\"HTTP Request\").first().json.embedding) }}'::vector(768)\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "7ee035f0-77e2-412c-9cb3-41875bcddf55",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "rXPx9j8n3ZWFPZ95",
+          "name": "PostgreSQL credentials personal_assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map((item, index) => ({\n  id: index + 1,\n  content: `${item.json.Type} document for ${item.json.Name}. Document number: ${item.json.Number}. Issued on ${item.json.Issue_date} in ${item.json.Issue_place}, expires on ${item.json.Expiration_date}.`,\n  category: \"personal_documents\",\n  source: \"doc_form_1\", \n  metadata: JSON.stringify({\n    name: item.json.Name,\n    type: item.json.Type,\n    number: item.json.Number,\n    issue_date: item.json.Issue_date,\n    expiration_date: item.json.Expiration_date,\n    issue_place: item.json.Issue_place\n  })\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "c8065d0e-0931-4b9e-bd26-d199f688c8e6",
+      "name": "Code1"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-08-09T23:46:45.440Z",
+  "updatedAt": "2025-10-01T02:03:26.825Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "c032e4dd-025b-41e9-9d55-3451f6f2c3ca",
+  "triggerCount": 0,
+  "id": "Oo5AHVR40Sl5TvRj",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": "WxkLNiYI2I4KBiMN",
+  "isArchived": true,
+  "versionCounter": 1,
+  "description": null,
+  "activeVersionId": null
+}
