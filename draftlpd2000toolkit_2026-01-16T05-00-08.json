@@ -1,0 +1,215 @@
+{
+  "name": "draft_lpd2000 ToolKit",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are a Google services assistant. Process this user request: {{ $json.userRequest }}\n\nAvailable services:\n- Calendar: Check appointments, schedule meetings, find free time\n- Gmail: Check emails, send emails, search messages  \n- Drive: Find files, create documents, share files\n- Contacts: Find contact information\n\nFor this request, provide a helpful response. If you need to perform actual API calls, explain what you would do.\n\nUser request: {{ $json.userRequest }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        -432
+      ],
+      "id": "369c2ad9-81b1-476b-9580-51b6aa6c31e7",
+      "name": "Google Services Agent",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "response",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "success",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "3",
+              "name": "timestamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        -384
+      ],
+      "id": "5bfc15e5-1466-4473-8c2f-88891318e494",
+      "name": "Format Response",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -368,
+        -144
+      ],
+      "id": "ee1b41cf-40cb-4c68-b184-834d4f851ba3",
+      "name": "Google LLM",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "lpd2000@gmail.com",
+          "mode": "list",
+          "cachedResultName": "lpd2000@gmail.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        -240
+      ],
+      "id": "89b74fa4-87af-4c47-bfe3-ffd302a1fd30",
+      "name": "Get many events in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "UpYMdK76SRAFiDWv",
+          "name": "GCalendar account LPD2000"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "lpd2000@gmail.com",
+          "mode": "list",
+          "cachedResultName": "lpd2000@gmail.com"
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -656,
+        -240
+      ],
+      "id": "38b3bc0b-8e19-4887-ab64-327fd7a97c96",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "UpYMdK76SRAFiDWv",
+          "name": "GCalendar account LPD2000"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "path": "52015d28-d87a-4f6f-9ca2-7c060c9365e5"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        -400
+      ],
+      "id": "74225823-c713-4066-bee2-d6e2bc429357",
+      "name": "MCP Server Trigger",
+      "webhookId": "52015d28-d87a-4f6f-9ca2-7c060c9365e5",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Google Services Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Google Services Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-09-07T22:58:26.190Z",
+  "updatedAt": "2025-11-14T18:15:25.352Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "cdf1e455-4119-41ac-94bb-18258f8eefe4",
+  "triggerCount": 1,
+  "id": "N5AjLm6lP6ivUxzc",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": "Y03MeCfY76fI7CHQ",
+  "isArchived": false,
+  "versionCounter": 4,
+  "description": null,
+  "activeVersionId": null
+}
