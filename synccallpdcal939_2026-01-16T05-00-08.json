@@ -1,0 +1,420 @@
+{
+  "name": "SYNC CAL LPD CAL 939",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        368,
+        -80
+      ],
+      "id": "67fb9bc3-3d0f-4b3f-b72c-978e5d827dfd",
+      "name": "Do Nothing1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "31f37451-9f49-41c8-bf80-e8722fafe7ba",
+              "leftValue": "={{ $json.start.dateTime }}",
+              "rightValue": "2025-11-07T00:00:00",
+              "operator": {
+                "type": "dateTime",
+                "operation": "afterOrEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        -48
+      ],
+      "id": "d1f54e90-36cf-42fe-b8a3-67435311ee64",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "calendarId": {
+          "__rl": true,
+          "value": "lpd2000@gmail.com",
+          "mode": "list",
+          "cachedResultName": "lpd2000@gmail.com"
+        },
+        "triggerOn": "eventCreated",
+        "options": {
+          "matchTerm": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTrigger",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        16
+      ],
+      "id": "bd532594-6ce1-4499-9602-99efe74e49cc",
+      "name": "created",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "UpYMdK76SRAFiDWv",
+          "name": "GCalendar account LPD2000"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "9397417@gmail.com",
+          "mode": "list",
+          "cachedResultName": "9397417@gmail.com"
+        },
+        "start": "={{ $('created').item.json.start.dateTime }}",
+        "end": "={{ $('created').item.json.end.dateTime }}",
+        "additionalFields": {
+          "description": "",
+          "summary": "=PLACEHOLDER FOR \"{{ $('created').item.json.organizer.email }} {{ $('created').item.json.summary }} "
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        112
+      ],
+      "id": "7920b1b7-9f25-4c15-9002-0c2ffc3a0267",
+      "name": "Create",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "1zAAg8U8iPEwINFE",
+          "name": "GCalendar account 9397417"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "calendarId": {
+          "__rl": true,
+          "value": "lpd2000@gmail.com",
+          "mode": "list",
+          "cachedResultName": "lpd2000@gmail.com"
+        },
+        "triggerOn": "eventCancelled",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTrigger",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        448
+      ],
+      "id": "3b4e3061-4f16-46c1-8c3d-5a3a8780c5e7",
+      "name": "deleted",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "UpYMdK76SRAFiDWv",
+          "name": "GCalendar account LPD2000"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "calendarId": {
+          "__rl": true,
+          "value": "lpd2000@gmail.com",
+          "mode": "list",
+          "cachedResultName": "lpd2000@gmail.com"
+        },
+        "triggerOn": "eventUpdated",
+        "options": {
+          "matchTerm": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTrigger",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        256
+      ],
+      "id": "61f2c5e8-5aee-4f6f-a8f1-434802679d3a",
+      "name": "updated",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "UpYMdK76SRAFiDWv",
+          "name": "GCalendar account LPD2000"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "9397417@gmail.com",
+          "mode": "list",
+          "cachedResultName": "9397417@gmail.com"
+        },
+        "eventId": "={{ $json.extractedId }}",
+        "updateFields": {
+          "end": "={{ $json.end.dateTime }}",
+          "start": "={{ $json.start.dateTime }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        288
+      ],
+      "id": "d9351b8b-d9a5-42bd-a09d-b997025ee939",
+      "name": "Update",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "1zAAg8U8iPEwINFE",
+          "name": "GCalendar account 9397417"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "9397417@gmail.com",
+          "mode": "list",
+          "cachedResultName": "9397417@gmail.com"
+        },
+        "eventId": "={{ $json.extractedId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        448
+      ],
+      "id": "43b6c1ec-62b7-4616-944f-7db377156a8c",
+      "name": "Delete",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "1zAAg8U8iPEwINFE",
+          "name": "GCalendar account 9397417"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "lpd2000@gmail.com",
+          "mode": "list",
+          "cachedResultName": "lpd2000@gmail.com"
+        },
+        "eventId": "={{ $('created').item.json.id }}",
+        "updateFields": {
+          "description": "={{ $json.description }} ID: {{ $json.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        112
+      ],
+      "id": "322039f0-7ff0-4172-81b2-8087255505ef",
+      "name": "Update an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "UpYMdK76SRAFiDWv",
+          "name": "GCalendar account LPD2000"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const description = $input.item.json.description;\nconst extracted = description.split('ID: ')[1]?.trim() || '';\n\nreturn {\n  json: {\n    ...$input.item.json,\n    extractedId: extracted\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        272
+      ],
+      "id": "79edb289-2ac0-49b0-9f0d-734420180f08",
+      "name": "Extract ID 1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const description = $input.item.json.description;\nconst extracted = description.split('ID: ')[1]?.trim() || '';\n\nreturn {\n  json: {\n    ...$input.item.json,\n    extractedId: extracted\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        448
+      ],
+      "id": "1ea8e275-55be-4a37-ab36-2f6fc1608a74",
+      "name": "Extract ID 2"
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Do Nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "created": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "deleted": {
+      "main": [
+        [
+          {
+            "node": "Extract ID 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "updated": {
+      "main": [
+        [
+          {
+            "node": "Extract ID 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create": {
+      "main": [
+        [
+          {
+            "node": "Update an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract ID 1": {
+      "main": [
+        [
+          {
+            "node": "Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract ID 2": {
+      "main": [
+        [
+          {
+            "node": "Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "createdAt": "2025-08-09T23:27:00.931Z",
+  "updatedAt": "2025-11-11T00:47:58.795Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Google Calendar created": {
+      "lastTimeChecked": "2025-11-05T23:09:18Z"
+    },
+    "node:Google Calendar updated": {
+      "lastTimeChecked": "2025-11-05T23:09:18Z"
+    },
+    "node:created": {
+      "lastTimeChecked": "2026-01-15T22:12:33Z"
+    },
+    "node:deleted": {
+      "lastTimeChecked": "2026-01-15T22:12:32Z"
+    },
+    "node:updated": {
+      "lastTimeChecked": "2026-01-15T22:13:08Z"
+    }
+  },
+  "pinData": {},
+  "versionId": "7c279440-8091-4f0e-95d1-3a66000d7d77",
+  "triggerCount": 3,
+  "id": "o0cOT9WSMHxwnPUB",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": "rOWRQBXvfTGFiZFy",
+  "isArchived": false,
+  "versionCounter": 258,
+  "description": null,
+  "activeVersionId": "7c279440-8091-4f0e-95d1-3a66000d7d77"
+}
