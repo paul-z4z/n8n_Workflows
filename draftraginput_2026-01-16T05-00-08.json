@@ -1,0 +1,130 @@
+{
+  "name": "draft_RAG_input",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cce5974a-310a-4117-9dde-f90bfb194d6d",
+      "name": "When chat message received",
+      "webhookId": "abe29767-6dd5-458c-b319-a5ff588e5b6b"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "addfe5ea-ed58-4eb0-b6bc-ac74afc838b4",
+              "name": "raw_input",
+              "value": "category,title,content,tag1|tag2,0.1|0.2|0.3,true",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "8f4aeb41-2863-4867-92a5-6fb8c2bc4c37",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json.raw_input;\nconst parts = input.split(',');\n\nreturn [{\n  id: Date.now(), // auto-generate ID\n  category: parts[0].trim(),\n  title: parts[1].trim(), \n  data_json: { content: parts[2].trim() },\n  tags: parts[3] ? parts[3].split('|') : [],\n  embedding: parts[4] ? parts[4].split('|').map(n => parseFloat(n.trim())) : [0],\n  is_sensitive: parts[5] === 'true',\n  created_at: new Date().toISOString(),\n  updated_at: new Date().toISOString()\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        240
+      ],
+      "id": "611d71ec-04f4-43be-bc63-0b58216f72f4",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO personal_data (category, title, data_json, tags, embedding, is_sensitive, created_at, updated_at)\nVALUES (\n  '{{ $json.category }}',\n  '{{ $json.title }}', \n  '{{ JSON.stringify($json.data_json) }}'::jsonb,\n  ARRAY[{{ $json.tags.map(t => `'${t}'`).join(',') }}],\n  '[{{ $json.embedding.join(',') }}]'::vector,\n  {{ $json.is_sensitive }},\n  '{{ $json.created_at }}'::timestamp,\n  '{{ $json.updated_at }}'::timestamp\n)\nON CONFLICT (id) DO UPDATE SET\n  category = EXCLUDED.category,\n  title = EXCLUDED.title,\n  data_json = EXCLUDED.data_json,\n  tags = EXCLUDED.tags,\n  embedding = EXCLUDED.embedding,\n  is_sensitive = EXCLUDED.is_sensitive,\n  updated_at = EXCLUDED.updated_at;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "31b082d2-091b-4286-9a26-e7070a2f7267",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "rXPx9j8n3ZWFPZ95",
+          "name": "PostgreSQL credentials personal_assistant"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-09-09T23:45:43.468Z",
+  "updatedAt": "2025-11-14T17:59:37.541Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "7fa915b0-160f-4dab-810e-2379e9e1674a",
+  "triggerCount": 0,
+  "id": "RVPH9PSJcuDNNWip",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "isArchived": true,
+  "versionCounter": 2,
+  "description": null,
+  "activeVersionId": null
+}
