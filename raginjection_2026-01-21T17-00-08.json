@@ -1,0 +1,154 @@
+{
+  "name": "RAG injection",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Upload your data to test RAG",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload your file(s)",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf, .csv, .doc, .docx, .txt",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -928,
+        -208
+      ],
+      "id": "19b6bf8d-d128-4f8f-8bae-7fd88e076ae2",
+      "name": "Upload your file here",
+      "webhookId": "f29ef4ff-0f16-4edd-b33c-c15d90b2c01f"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -736,
+        80
+      ],
+      "id": "8a715064-0ae5-4129-8a4b-20057de583ba",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -496,
+        -48
+      ],
+      "id": "0ec311f2-2cca-48dc-b739-f07ee3560f4f",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "content": "### 📚 Load Data Flow",
+        "height": 460,
+        "width": 700,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -976,
+        -272
+      ],
+      "typeVersion": 1,
+      "id": "ae9b6bdb-4a9b-4b73-b6d1-37d72049f538",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "personal_data",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        -704,
+        -208
+      ],
+      "id": "2f1d9025-067d-443b-9788-b305157a8f55",
+      "name": "Postgres PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "rXPx9j8n3ZWFPZ95",
+          "name": "PostgreSQL credentials personal_assistant"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Upload your file here": {
+      "main": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-11-14T18:16:01.937Z",
+  "updatedAt": "2025-11-30T01:26:17.461Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "940fba29-d025-472d-a619-cd4172e79075",
+  "triggerCount": 0,
+  "id": "Wg9x5OfLlFTkDgHf",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": "Y03MeCfY76fI7CHQ",
+  "isArchived": true,
+  "versionCounter": 5,
+  "description": null,
+  "activeVersionId": null
+}
