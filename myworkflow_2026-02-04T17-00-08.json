@@ -1,0 +1,22 @@
+{
+  "name": "My workflow",
+  "active": false,
+  "nodes": [],
+  "connections": {},
+  "createdAt": "2025-11-22T01:07:18.132Z",
+  "updatedAt": "2025-11-25T21:31:15.387Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "313a2206-0663-4a79-b087-35c508c12173",
+  "triggerCount": 1,
+  "id": "GtDtwEjDDdJYRJqX",
+  "meta": null,
+  "parentFolderId": null,
+  "isArchived": true,
+  "versionCounter": 6,
+  "description": null,
+  "activeVersionId": null
+}
