@@ -1,0 +1,588 @@
+{
+  "name": "outdated_working_CN_data_parce",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.fileExtension }}",
+                    "rightValue": "txt",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "22e509b8-3166-4f78-9dd7-1dbba1e33bca"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TXT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a74c3454-d052-48ef-8380-df19b6f0e3e4",
+                    "leftValue": "={{ $json.fileExtension }}",
+                    "rightValue": "docx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DOCX"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c518709b-b45e-4860-ab1d-494f071fcc58",
+                    "leftValue": "={{ $json.fileExtension }}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        544,
+        144
+      ],
+      "id": "713ce533-962d-47c3-973d-ee04196161f2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        320,
+        16
+      ],
+      "id": "c2e01f4a-d1d5-40d1-b1c4-7b1ad40e0ec3",
+      "name": "Download",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SQXbjDm2Ja0QicjT",
+          "name": "Google Drive 9397417 CN"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        768,
+        352
+      ],
+      "id": "5d992319-ea89-4a90-bc54-1bbcb32fd50a",
+      "name": "Extract from PDF"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        768,
+        -48
+      ],
+      "id": "3891c1af-a910-401c-872d-29f88060fbc9",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-docx-converter.docxToText",
+      "typeVersion": 1,
+      "position": [
+        768,
+        160
+      ],
+      "id": "a5bec3b9-248a-4348-82c7-83069790e91b",
+      "name": "Extract from DOCX"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "append",
+              "field": "text"
+            },
+            {
+              "aggregation": "append",
+              "field": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        208
+      ],
+      "id": "6b1471da-fad0-441d-8346-3fb442ab3c69",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "03f4daa0-a59c-4425-8362-e7f535378fb5",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "done",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        -64
+      ],
+      "id": "b6bd1b63-6523-4e40-9d2b-af14f59a3591",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        768,
+        -256
+      ],
+      "id": "be388e7e-c343-4479-95e3-ff127c7069bd",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "=done_ {{ $json.name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        544,
+        -80
+      ],
+      "id": "3920576a-8793-4135-911c-130db27a39c0",
+      "name": "done",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SQXbjDm2Ja0QicjT",
+          "name": "Google Drive 9397417 CN"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "text-embedding-3-small"
+            },
+            {
+              "name": "input",
+              "value": "=={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        208
+      ],
+      "id": "c14f7073-21bf-4b74-95dd-52fc6b03994e",
+      "name": "HTTP Request",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the text - try different possible field names\nconst text = ($json.appended_text && $json.appended_text[0]) || $json.appended_data[0] || $json.text || $json.extractedText || '';\nconst fileName = $json.fileName || $('Download').item.json.name;\nconst fileId = $json.fileId || $('Download').item.json.id;\n\n// Check if we have text\nif (!text || text.length === 0) {\n  return [{\n    json: {\n      error: 'No text found to chunk',\n      fileName: fileName,\n      fileId: fileId\n    }\n  }];\n}\n\nconst CHUNK_SIZE = 1000;\nconst OVERLAP = 150;\n\nconst chunks = [];\nlet start = 0;\n\nwhile (start < text.length) {\n  const end = Math.min(start + CHUNK_SIZE, text.length);\n  const chunk = text.slice(start, end).trim();\n  \n  if (chunk.length > 0) {\n    chunks.push({\n      text: chunk,\n      chunkIndex: chunks.length,\n      fileName: fileName,\n      fileId: fileId\n    });\n  }\n  \n  start += CHUNK_SIZE - OVERLAP;\n}\n\nreturn chunks.map(chunk => ({ json: chunk }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        208
+      ],
+      "id": "a19ef4f3-902d-4d72-b34e-32d6b27910c9",
+      "name": "Create chunks"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5315e2a-4e0b-4767-9907-5d86227d7a4e",
+              "name": "embedding_formatted",
+              "value": "={{ JSON.stringify($json.body.data[0].embedding) }}",
+              "type": "string"
+            },
+            {
+              "id": "872a519a-84dd-4fb7-98bf-2d3ab6d3327f",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1664,
+        208
+      ],
+      "id": "e065e88b-0cb8-4525-9db4-4339f42173b7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 15,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "16gPIm3EcPcbeH14joSagcP1JdwWcYksE",
+          "mode": "list",
+          "cachedResultName": "CodeNinjas",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/16gPIm3EcPcbeH14joSagcP1JdwWcYksE"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        -64
+      ],
+      "id": "f56cd2ea-eaf1-4d37-b47b-222f9c436df3",
+      "name": "9397417 Drive for CN",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SQXbjDm2Ja0QicjT",
+          "name": "Google Drive 9397417 CN"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO document_embeddings (\n  file_id,\n  file_name,\n  chunk_index,\n  chunk_text,\n  embedding,\n  metadata\n) VALUES (\n  '{{ $('Create chunks').item.json.fileId }}',\n  '{{ $('Create chunks').item.json.fileName }}',\n  {{ $('Create chunks').item.json.chunkIndex }},\n  $doc${{ $('Create chunks').item.json.text }}$doc$,\n  '{{ $json.embedding_formatted }}'::vector,\n  '{}'::jsonb\n)",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1888,
+        208
+      ],
+      "id": "94513eac-ee04-4c41-b9ba-794744eb328f",
+      "name": "Inject the db for CN",
+      "credentials": {
+        "postgres": {
+          "id": "7R7pU7OMG9rLAodz",
+          "name": "CNWC_database"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from DOCX",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from PDF": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from DOCX": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "done": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Create chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create chunks": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Inject the db for CN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9397417 Drive for CN": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-09-29T21:21:27.599Z",
+  "updatedAt": "2025-11-14T18:13:05.909Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Google Drive Trigger": {
+      "lastTimeChecked": "2025-09-30T01:55:52Z"
+    }
+  },
+  "pinData": {},
+  "versionId": "2ddf119f-d992-4e78-840f-56516cf3a9cd",
+  "triggerCount": 1,
+  "id": "UuWJb1BVUTieESCj",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": "Tj9st8nLcUxlvAXe",
+  "isArchived": false,
+  "versionCounter": 3,
+  "description": null,
+  "activeVersionId": null
+}
