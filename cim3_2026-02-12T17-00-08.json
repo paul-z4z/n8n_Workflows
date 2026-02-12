@@ -1,0 +1,679 @@
+{
+  "name": "CIM3",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Upload ML Listing",
+        "formDescription": "Upload listing information",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "listing_pdf",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "email",
+              "fieldType": "email",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -640,
+        -32
+      ],
+      "id": "c3f76bf0-2d2e-4f93-a82c-ce56a1900d5c",
+      "name": "Form_Trigger",
+      "webhookId": "3972acc5-ed8f-45ef-b08c-08ea9f9acebc"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "listing_pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -416,
+        -32
+      ],
+      "id": "0a28fa27-e6b6-4f88-bf50-8318f3b8f9ac",
+      "name": "Extract_PDF"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract business information from this listing:\n\n{{ $json.text }}\n\nReturn ONLY valid JSON:\n{\n  \"businessName\": \"\",\n  \"businessType\": \"\",\n  \"address\": \"\",\n  \"leasedSpace\": \"\",\n  \"parkingSpace\": \"\",\n  \"agentName\": \"\",\n  \"agentEmail\": \"\",\n  \"agentPhone\": \"\",\n  \"agentNotes\": \"\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        -32
+      ],
+      "id": "5f9ecd03-773c-45d8-9a8a-c599441c8b5d",
+      "name": "Parse_Business_Details"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -128,
+        192
+      ],
+      "id": "6fbe73d8-ce9d-4b47-bd54-ae7123e02848",
+      "name": "LLM_Parse",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import json\nimport re\n\n# Get the raw output\nraw = _input.item.json.get('output', '')\n\n# If empty, return error\nif not raw:\n    return {'json': {'error': 'No output from agent'}}\n\n# Remove markdown code blocks if present\nraw = re.sub(r'```json\\s*', '', raw)\nraw = re.sub(r'```\\s*', '', raw)\n\n# Try to find JSON in the text\ntry:\n    # Look for first { to last }\n    start = raw.index('{')\n    end = raw.rindex('}') + 1\n    json_str = raw[start:end]\n    data = json.loads(json_str)\n    return {'json': data}\nexcept Exception as e:\n    # If parsing fails, return the raw text for debugging\n    return {'json': {'error': str(e), 'raw_output': raw}}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -32
+      ],
+      "id": "789d431a-35dc-4897-babd-d6384053d68d",
+      "name": "Parse_JSON"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search the internet for business information",
+        "query": "={{ $fromAI('Query', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -464
+      ],
+      "id": "9b9be971-cd11-4dde-aee8-47b3bef1db84",
+      "name": "Web_Search",
+      "credentials": {
+        "tavilyApi": {
+          "id": "oqdSWHxM8aQ5uKiO",
+          "name": "Tavily"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Competitor Analysis:\n\nBusiness: {{ $json.businessName }}\nType: {{ $json.businessType }}\nAddress: {{ $json.address }}\n\nFind 3-5 direct competitors within 5km. For each:\n- Name\n- Services\n- Online presence\n- Positioning\n- Strengths\n- Weaknesses\n\nReturn ONLY JSON:\n{\"competitors\": [{\"name\":\"\", \"services\":\"\", \"online\":\"\", \"positioning\":\"\", \"strengths\":\"\", \"weaknesses\":\"\"}]}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        -736
+      ],
+      "id": "0b592f31-ddc8-4954-997c-792644f1ab22",
+      "name": "Competitor_Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        -512
+      ],
+      "id": "99b77cc8-5539-4787-9df0-1fd0d92400f0",
+      "name": "LLM_Competitor",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Demographics Analysis:\n\nLocation: {{ $json.address }}\nBusiness: {{ $json.businessType }}\n\nResearch:\n- Population density\n- Age distribution  \n- Income levels\n- Foot traffic patterns\n- Target segments\n\nProvide concise analysis.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        -336
+      ],
+      "id": "1f5438eb-62ba-492e-b7bb-68ef7b59db0f",
+      "name": "Demographics_Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        -112
+      ],
+      "id": "70556376-8d4a-451a-ad8e-4372fb5f6d69",
+      "name": "LLM_Demographics",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Reviews & Reputation:\n\nBusiness: {{ $json.businessName }}\nAddress: {{ $json.address }}\n\nSearch Google Maps, Yelp, Facebook for:\n- Ratings\n- Sentiment\n- Common praise\n- Common complaints\n- Online presence\n\nProvide concise analysis.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        64
+      ],
+      "id": "70932ecf-7a57-4fec-9652-f7e988885dbb",
+      "name": "Reviews_Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        288
+      ],
+      "id": "09b91ece-44de-49a7-ab7e-e1542fbfddf0",
+      "name": "LLM_Reviews",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Market Trends:\n\nBusiness Type: {{ $json.businessType }}\nLocation: {{ $json.address }}\n\nResearch:\n- Industry trends\n- Local market conditions\n- Growth/decline\n- Consumer behavior\n- Opportunities & threats\n\nProvide concise analysis.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        576
+      ],
+      "id": "6e64efd9-c71a-4b36-8b96-9c53fec4e4e1",
+      "name": "Market_Trends_Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        800
+      ],
+      "id": "954d770e-2e61-4790-a42f-a456db2b6bfe",
+      "name": "LLM_Trends",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst carbonData = {\n  businessName: $('Parse_JSON').first().json.businessName,\n  agentName: $('Parse_JSON').first().json.agentName,\n  agentPhone: $('Parse_JSON').first().json.agentPhone,\n  agentEmail: $('Parse_JSON').first().json.agentEmail,\n  businessType: $('Parse_JSON').first().json.businessType,\n  address: $('Parse_JSON').first().json.address,\n  leaseSpace: $('Parse_JSON').first().json.leasedSpace,\n  agentNotes: $('Parse_JSON').first().json.agentNotes,\n  businessCompetitors: items[0].json.output,\n  areaDemographics: items[1].json.output,\n  businessReviews: items[2].json.output,\n  marketTrends: items[3].json.output\n};\n\nreturn {\n  json: {\n    data: carbonData\n  },\n  pairedItem: 0\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        -208
+      ],
+      "id": "20bf1176-93af-4529-ae9b-56ce497fbac8",
+      "name": "post-Merge"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1184,
+        -224
+      ],
+      "id": "f1684e12-c72f-4aee-baf0-89ce75be8d9e",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import json\nimport re\n\n# Get the raw output\nraw = _input.item.json.get('output', '')\n\n# If empty, return empty section\nif not raw:\n    return {'json': {'section': 'competitors', 'content': 'COMPETITOR ANALYSIS\\n' + '='*50 + '\\n\\nNo data available.\\n'}}\n\n# Remove markdown backticks and \"json\" label\nraw = raw.strip()\nraw = re.sub(r'^`+json\\s*', '', raw)  # Remove opening ```json\nraw = re.sub(r'`+$', '', raw)  # Remove closing ```\nraw = raw.strip()\n\n# Parse JSON\ntry:\n    data = json.loads(raw)\nexcept Exception as e:\n    return {'json': {'section': 'competitors', 'content': f'COMPETITOR ANALYSIS\\n' + '='*50 + f'\\n\\nError parsing: {str(e)}\\n'}}\n\ncomps = data.get('competitors', [])\n\ntable = 'COMPETITOR ANALYSIS\\n' + '='*50 + '\\n\\n'\ntable += 'Name\\tServices\\tOnline\\tPositioning\\tStrengths\\tWeaknesses\\n'\ntable += '---\\t---\\t---\\t---\\t---\\t---\\n'\n\nfor c in comps:\n    table += f\"{c.get('name','')}\\t{c.get('services','')}\\t{c.get('online','')}\\t{c.get('positioning','')}\\t{c.get('strengths','')}\\t{c.get('weaknesses','')}\\n\"\n\nreturn {'json': {'section': 'competitors', 'content': table}}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        -736
+      ],
+      "id": "b019cc44-3ed5-4a7b-a506-52abcfb8c40a",
+      "name": "Format_Competitors"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "raw = _input.item.json['output']\ntext = raw.replace('###','').replace('**','')\n\ncontent = 'DEMOGRAPHICS & FOOT TRAFFIC\\n' + '='*50 + '\\n\\n' + text\n\nreturn {'json': {'section': 'demographics', 'content': content}}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        -416
+      ],
+      "id": "f2e5795d-8e44-4f2e-8e56-47d17ca1944e",
+      "name": "Format_Demographics"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "raw = _input.item.json['output']\ntext = raw.replace('###','').replace('**','')\n\ncontent = 'REVIEWS & REPUTATION\\n' + '='*50 + '\\n\\n' + text\n\nreturn {'json': {'section': 'reviews', 'content': content}}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        80
+      ],
+      "id": "cc34ca59-4399-4f77-bf07-b9ec0792b926",
+      "name": "Format_Reviews"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "raw = _input.item.json['output']\ntext = raw.replace('###','').replace('**','')\n\ncontent = 'MARKET TRENDS & CONDITIONS\\n' + '='*50 + '\\n\\n' + text\n\nreturn {'json': {'section': 'trends', 'content': content}}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        480
+      ],
+      "id": "9c047f2c-cf64-41ef-86aa-8c56c91230f0",
+      "name": "Format_Trends"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.carbone.io/render/3ef9a7d351a2f2a0264e1c149d4466c17b0458670b27a9b45086c536e43f0748",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1632,
+        -208
+      ],
+      "id": "26b0f3b8-d001-4a85-94ed-67e3d174e25f",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1yngL5cLmDCn4VwL",
+          "name": "Header Auth Carbone.io Production key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.carbone.io/render/{{ $json.data.renderId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1840,
+        -208
+      ],
+      "id": "a4a0e5d9-4b83-4886-8796-8ccd355b95a6",
+      "name": "Report",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1yngL5cLmDCn4VwL",
+          "name": "Header Auth Carbone.io Production key"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Form_Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract_PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract_PDF": {
+      "main": [
+        [
+          {
+            "node": "Parse_Business_Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse_Business_Details": {
+      "main": [
+        [
+          {
+            "node": "Parse_JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM_Parse": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Parse_Business_Details",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse_JSON": {
+      "main": [
+        [
+          {
+            "node": "Competitor_Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Demographics_Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reviews_Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Market_Trends_Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web_Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "Competitor_Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Demographics_Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Reviews_Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Market_Trends_Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Competitor_Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM_Competitor": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Competitor_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Demographics_Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "LLM_Demographics": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Demographics_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reviews_Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "LLM_Reviews": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Reviews_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Market_Trends_Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "LLM_Trends": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Market_Trends_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "post-Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format_Competitors": {
+      "main": [
+        []
+      ]
+    },
+    "Format_Demographics": {
+      "main": [
+        []
+      ]
+    },
+    "Format_Reviews": {
+      "main": [
+        []
+      ]
+    },
+    "Format_Trends": {
+      "main": [
+        []
+      ]
+    },
+    "post-Merge": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-12-11T23:54:14.733Z",
+  "updatedAt": "2025-12-12T05:08:00.988Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "e60e10a3-7851-4f17-93d6-88b5fbe9971b",
+  "triggerCount": 0,
+  "id": "LZcKR13XQmW2Nabu",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "isArchived": false,
+  "versionCounter": 32,
+  "description": null,
+  "activeVersionId": null
+}
