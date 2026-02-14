@@ -1,0 +1,193 @@
+{
+  "name": "CIM3",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Upload ML Listing",
+        "formDescription": "Upload listing information",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "listing_pdf",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "email",
+              "fieldType": "email",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -640,
+        -32
+      ],
+      "id": "5cc6db78-bf1e-422a-9961-19f3051dad9d",
+      "name": "Form_Trigger",
+      "webhookId": "3e2a43dd-0deb-40cd-a3a5-10887d7efe93"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "listing_pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -416,
+        -32
+      ],
+      "id": "bd77c4a6-5231-47f3-88aa-2acc47879921",
+      "name": "Extract_PDF"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract business information from this listing:\n\n{{ $json.text }}\n\nReturn ONLY valid JSON:\n{\n  \"businessName\": \"\",\n  \"businessType\": \"\",\n  \"address\": \"\",\n  \"leasedSpace\": \"\",\n  \"parkingSpace\": \"\",\n  \"agentName\": \"\",\n  \"agentEmail\": \"\",\n  \"agentPhone\": \"\",\n  \"agentNotes\": \"\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        -32
+      ],
+      "id": "c413ff03-2c61-4d7c-89f0-42f1daa4f8db",
+      "name": "Parse_Business_Details"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -128,
+        192
+      ],
+      "id": "44016f74-6f4a-4757-8458-f1c98e93620e",
+      "name": "LLM_Parse",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import json\nimport re\n\n# Get the raw output\nraw = _input.item.json.get('output', '')\n\n# If empty, return error\nif not raw:\n    return {'json': {'error': 'No output from agent'}}\n\n# Remove markdown code blocks if present\nraw = re.sub(r'```json\\s*', '', raw)\nraw = re.sub(r'```\\s*', '', raw)\n\n# Try to find JSON in the text\ntry:\n    # Look for first { to last }\n    start = raw.index('{')\n    end = raw.rindex('}') + 1\n    json_str = raw[start:end]\n    data = json.loads(json_str)\n    return {'json': data}\nexcept Exception as e:\n    # If parsing fails, return the raw text for debugging\n    return {'json': {'error': str(e), 'raw_output': raw}}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -32
+      ],
+      "id": "8da238c1-ce22-4452-aab4-9ddc598f9537",
+      "name": "Parse_JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get business data from Parse_JSON\nconst businessData = $input.item.json;\n\n// Your API credentials (set these in n8n credentials)\nconst OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY'; // Replace with credential reference\nconst TAVILY_API_KEY = 'YOUR_TAVILY_API_KEY'; // Replace with credential reference\n\n// Helper function to search web using Tavily\nasync function searchWeb(query) {\n  const response = await fetch('https://api.tavily.com/search', {\n    method: 'POST',\n    headers: {\n      'Content-Type': 'application/json'\n    },\n    body: JSON.stringify({\n      api_key: TAVILY_API_KEY,\n      query: query,\n      search_depth: 'basic',\n      max_results: 5\n    })\n  });\n  \n  const data = await response.json();\n  return data.results.map(r => `${r.title}: ${r.content}`).join('\\n\\n');\n}\n\n// Helper function to call OpenAI\nasync function callLLM(systemPrompt, userPrompt, searchContext = '') {\n  const messages = [\n    { role: 'system', content: systemPrompt }\n  ];\n  \n  if (searchContext) {\n    messages.push({ role: 'system', content: `Search Results:\\n${searchContext}` });\n  }\n  \n  messages.push({ role: 'user', content: userPrompt });\n  \n  const response = await fetch('https://api.openai.com/v1/chat/completions', {\n    method: 'POST',\n    headers: {\n      'Content-Type': 'application/json',\n      'Authorization': `Bearer ${OPENAI_API_KEY}`\n    },\n    body: JSON.stringify({\n      model: 'gpt-4o-mini',\n      messages: messages,\n      temperature: 0.7\n    })\n  });\n  \n  const data = await response.json();\n  return data.choices[0].message.content;\n}\n\n// 1. COMPETITOR ANALYSIS\nconst competitorSearch = await searchWeb(\n  `${businessData.businessName} ${businessData.businessType} competitors near ${businessData.address}`\n);\n\nconst competitorPrompt = `Competitor Analysis:\n\nBusiness: ${businessData.businessName}\nType: ${businessData.businessType}\nAddress: ${businessData.address}\n\nFind 3-5 direct competitors within 5km. For each:\n- Name\n- Services\n- Online presence\n- Positioning\n- Strengths\n- Weaknesses\n\nReturn ONLY JSON:\n{\"competitors\": [{\"name\":\"\", \"services\":\"\", \"online\":\"\", \"positioning\":\"\", \"strengths\":\"\", \"weaknesses\":\"\"}]}`;\n\nconst competitorRaw = await callLLM(\n  'You are a business research analyst. Always return valid JSON.',\n  competitorPrompt,\n  competitorSearch\n);\n\n// Format competitors\nlet competitorFormatted = 'COMPETITOR ANALYSIS\\n' + '='.repeat(50) + '\\n\\n';\ntry {\n  const cleanJson = competitorRaw.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  const compData = JSON.parse(cleanJson);\n  competitorFormatted += 'Name\\tServices\\tOnline\\tPositioning\\tStrengths\\tWeaknesses\\n';\n  competitorFormatted += '---\\t---\\t---\\t---\\t---\\t---\\n';\n  \n  for (const c of compData.competitors) {\n    competitorFormatted += `${c.name}\\t${c.services}\\t${c.online}\\t${c.positioning}\\t${c.strengths}\\t${c.weaknesses}\\n`;\n  }\n} catch (e) {\n  competitorFormatted += 'Error parsing competitor data\\n';\n}\n\n// 2. DEMOGRAPHICS ANALYSIS\nconst demoSearch = await searchWeb(\n  `demographics ${businessData.address} population income foot traffic`\n);\n\nconst demoPrompt = `Demographics Analysis:\n\nLocation: ${businessData.address}\nBusiness: ${businessData.businessType}\n\nResearch:\n- Population density\n- Age distribution  \n- Income levels\n- Foot traffic patterns\n- Target segments\n\nProvide concise analysis.`;\n\nconst demoRaw = await callLLM(\n  'You are a demographics research analyst.',\n  demoPrompt,\n  demoSearch\n);\n\nconst demoFormatted = 'DEMOGRAPHICS & FOOT TRAFFIC\\n' + '='.repeat(50) + '\\n\\n' + \n  demoRaw.replace(/###/g, '').replace(/\\*\\*/g, '');\n\n// 3. REVIEWS & REPUTATION\nconst reviewSearch = await searchWeb(\n  `${businessData.businessName} reviews ratings yelp google maps ${businessData.address}`\n);\n\nconst reviewPrompt = `Reviews & Reputation:\n\nBusiness: ${businessData.businessName}\nAddress: ${businessData.address}\n\nSearch Google Maps, Yelp, Facebook for:\n- Ratings\n- Sentiment\n- Common praise\n- Common complaints\n- Online presence\n\nProvide concise analysis.`;\n\nconst reviewRaw = await callLLM(\n  'You are a reputation research analyst.',\n  reviewPrompt,\n  reviewSearch\n);\n\nconst reviewFormatted = 'REVIEWS & REPUTATION\\n' + '='.repeat(50) + '\\n\\n' + \n  reviewRaw.replace(/###/g, '').replace(/\\*\\*/g, '');\n\n// 4. MARKET TRENDS\nconst trendSearch = await searchWeb(\n  `${businessData.businessType} market trends ${businessData.address} industry analysis`\n);\n\nconst trendPrompt = `Market Trends:\n\nBusiness Type: ${businessData.businessType}\nLocation: ${businessData.address}\n\nResearch:\n- Industry trends\n- Local market conditions\n- Growth/decline\n- Consumer behavior\n- Opportunities & threats\n\nProvide concise analysis.`;\n\nconst trendRaw = await callLLM(\n  'You are a market trends analyst.',\n  trendPrompt,\n  trendSearch\n);\n\nconst trendFormatted = 'MARKET TRENDS & CONDITIONS\\n' + '='.repeat(50) + '\\n\\n' + \n  trendRaw.replace(/###/g, '').replace(/\\*\\*/g, '');\n\n// Return complete data for Carbone\nreturn {\n  json: {\n    businessName: businessData.businessName || '',\n    businessType: businessData.businessType || '',\n    address: businessData.address || '',\n    leaseSpace: businessData.leasedSpace || '',\n    agentName: businessData.agentName || '',\n    agentEmail: businessData.agentEmail || '',\n    agentPhone: businessData.agentPhone || '',\n    agentNotes: businessData.agentNotes || '',\n    businessCompetitors: competitorFormatted,\n    areaDemographics: demoFormatted,\n    businessReviews: reviewFormatted,\n    marketTrends: trendFormatted\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -32
+      ],
+      "id": "f11dd0ff-1fb4-48b8-8c25-9a27b012da05",
+      "name": "Brain"
+    }
+  ],
+  "connections": {
+    "Form_Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract_PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract_PDF": {
+      "main": [
+        [
+          {
+            "node": "Parse_Business_Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse_Business_Details": {
+      "main": [
+        [
+          {
+            "node": "Parse_JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM_Parse": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Parse_Business_Details",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse_JSON": {
+      "main": [
+        [
+          {
+            "node": "Brain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-12-11T23:32:15.432Z",
+  "updatedAt": "2025-12-11T23:54:04.259Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "f42bfa13-5917-4fbc-96e4-78fc93bf2dad",
+  "triggerCount": 0,
+  "id": "aNVh4Swoc43pj3JG",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "isArchived": true,
+  "versionCounter": 19,
+  "description": null,
+  "activeVersionId": null
+}
