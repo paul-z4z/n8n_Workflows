@@ -1,0 +1,98 @@
+{
+  "name": "Agent to Retrieve personal data",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "05225228-aaba-49de-ab04-a57709d0bdd5",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c09af4de-843c-4320-a4c4-95ba8dfe35f2",
+      "name": "Webhook",
+      "webhookId": "05225228-aaba-49de-ab04-a57709d0bdd5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://litellm:4000/embeddings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "sk-hbuPX9VVGQ"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "={\n  \"model\": \"all-MiniLM-L6-v2\",\n  \"input\": \"{{ $json.body.question }}\"\n}",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "27a0805a-bf89-488e-a1b1-3ebd1197d20e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "content": "My Recommendations:\n\nAgent Framework: Use n8n's built-in HTTP Request nodes + PostgreSQL nodes combined with LiteLLM for AI processing. This is simpler than LangChain for your use case.\nRetrieval Method: Hybrid approach - use vector similarity search for semantic queries + traditional SQL for exact matches (like document numbers).\nArchitecture: Create a workflow that can handle both semantic search (\"find my contact info\") and exact queries (\"get document ABC123\").",
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -368,
+        -256
+      ],
+      "typeVersion": 1,
+      "id": "25ce1abf-86e0-40e4-9cc3-f056af457327",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-08-12T23:48:54.674Z",
+  "updatedAt": "2025-11-14T18:12:02.843Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "57767648-9ab2-4c45-a8cd-fc0d1587fabb",
+  "triggerCount": 0,
+  "id": "8uLWrcitcsdEz4SW",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": null,
+  "isArchived": true,
+  "versionCounter": 2,
+  "description": null,
+  "activeVersionId": null
+}
