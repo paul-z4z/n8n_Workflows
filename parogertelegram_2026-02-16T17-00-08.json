@@ -1,0 +1,634 @@
+{
+  "name": "PA Roger >>Telegram",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a helpful AI assistant with access to tools. When you draft a message or send an email, humanize the text. if the task is not clear, ask any questions if needed before you proceed.\n\n**Available Tools:**\n1. Date & Time - Use for current date/time questions\n2. Retrieve - Use to search the user's personal notes, documents, and stored information\n3. MSP Client - Use to do all Google activities, such as create a new event in the calendar, send an email, etc.\n\n**When to use Retrieve:**\n- User asks about their notes, files, or personal information\n- User wants to recall something they stored\n- Questions like \"what do I have about X?\" or \"find my notes on Y\"\n\n**Important:**\n- For general knowledge questions, answer directly without tools\n- Always use Retrieve when the user references their personal data\n\nUser request: {{ $if($('Telegram In').isExecuted, $('Telegram In').item.json.message.text, $json.body.message || $json.body.query || $json.body.text) }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -480,
+        144
+      ],
+      "id": "c22eeeed-c80d-42cd-a467-ccf6c99ad8eb",
+      "name": "Master Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4024faed-ee65-47ad-9155-4a926fdc07d1",
+              "name": "cleanText",
+              "value": "={{ $json.output.split('\\n').filter(line => !line.includes('ROUTE:')).join('\\n').replace(/[*_\\[\\](){}]/g, '') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        128
+      ],
+      "id": "e7ab6742-9f23-40bd-b500-8bd2d1612c4d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -592,
+        368
+      ],
+      "id": "2a6d5bfc-7fd5-4a07-ae3b-19861cf2f220",
+      "name": "LLM",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://n8n:5678/webhook/52015d28-d87a-4f6f-9ca2-7c060c9365e5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        -416,
+        592
+      ],
+      "id": "a08ce770-ae7e-44ac-ae7e-21f1702adc8f",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "options": {
+          "timezone": "America/Los_Angeles"
+        }
+      },
+      "type": "n8n-nodes-base.dateTimeTool",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        400
+      ],
+      "id": "32f46fb7-4764-40fd-9e2c-d3ef55184400",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are a Google services assistant. Process this user request: {{ $json.userRequest }}\n\nAvailable services:\n- Calendar: Check appointments, schedule meetings, find free time\n- Gmail: Check emails, send emails, search messages  \n- Drive: Find files, create documents, share files\n- Contacts: Find contact information\n\nFor this request, provide a helpful response. If you need to perform actual API calls, explain what you would do.\n\nUser request: {{ $json.userRequest }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -112,
+        1120
+      ],
+      "id": "8dd32e64-58fb-4ee8-8081-ecc885ccc926",
+      "name": "Google Services Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "response",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "success",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "3",
+              "name": "timestamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        1120
+      ],
+      "id": "7f1a4e78-222f-4358-8dad-f250a57fe068",
+      "name": "Format Response"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        1344
+      ],
+      "id": "5835ec99-77e8-4c39-96b5-27c4e7629561",
+      "name": "Google LLM",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "52015d28-d87a-4f6f-9ca2-7c060c9365e5"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        1120
+      ],
+      "id": "12193a8e-9728-4f26-bf81-bcd20613375a",
+      "name": "MCP Server Trigger",
+      "webhookId": "52015d28-d87a-4f6f-9ca2-7c060c9365e5"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search through my personal notes, documents, and information. Use this tool when the user asks about their personal data, stored notes, or uploaded files.",
+        "tableName": "personal_data",
+        "topK": 3,
+        "options": {
+          "columnNames": {
+            "values": {
+              "contentColumnName": "title",
+              "metadataColumnName": "data_json"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        160,
+        624
+      ],
+      "id": "05be6d87-f69c-46d1-ba01-0276bf049c83",
+      "name": "Retrieve",
+      "credentials": {
+        "postgres": {
+          "id": "rXPx9j8n3ZWFPZ95",
+          "name": "PostgreSQL credentials personal_assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "personal_data",
+        "options": {
+          "columnNames": {
+            "values": {
+              "vectorColumnName": "=embedding",
+              "contentColumnName": "title",
+              "metadataColumnName": "data_json"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        688
+      ],
+      "id": "83acfdeb-dc39-48dd-a61e-5c532809b20a",
+      "name": "Insert",
+      "credentials": {
+        "postgres": {
+          "id": "rXPx9j8n3ZWFPZ95",
+          "name": "PostgreSQL credentials personal_assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload your data to test RAG",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload your file(s)",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf, .csv, .doc, .docx, .txt, .md, .json, .xlsx, .xls, .html",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        528
+      ],
+      "id": "cd38b55c-0b86-45af-ba2d-f1a05104a1c8",
+      "name": "Upload",
+      "webhookId": "f29ef4ff-0f16-4edd-b33c-c15d90b2c01f"
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        496,
+        896
+      ],
+      "id": "c43cb091-2c1e-4cda-a877-fce4375df3c4",
+      "name": "Data Loader"
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 512
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        832
+      ],
+      "id": "5e34dd2d-3d8e-4efa-ad27-91bd4de705ea",
+      "name": "Embedding AI",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -752,
+        144
+      ],
+      "id": "11f44343-ab58-4939-b58e-0c99d2714025",
+      "name": "Telegram In",
+      "webhookId": "ad9a6d4a-d778-44e7-b099-96056d603d9b",
+      "credentials": {
+        "telegramApi": {
+          "id": "s0r2nKJcTTTNeDuC",
+          "name": "Telegram n8n_pilot_bot (@n8n_fly_bot)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram In').item.json.message.from.id }}",
+        "text": "={{ $json.cleanText }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        128
+      ],
+      "id": "1ade00f9-d636-408c-b1a4-06a2671a1d2c",
+      "name": "Telegram Out",
+      "webhookId": "a933bcfd-0d9e-4ef5-b430-fa6c2f4d7998",
+      "credentials": {
+        "telegramApi": {
+          "id": "s0r2nKJcTTTNeDuC",
+          "name": "Telegram n8n_pilot_bot (@n8n_fly_bot)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Personal RAG\n",
+        "height": 512,
+        "width": 848
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        64,
+        496
+      ],
+      "typeVersion": 1,
+      "id": "df2c3669-1a8a-4337-9b76-b7fdde3c5187",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "lpd2000@gmail.com",
+          "mode": "list",
+          "cachedResultName": "lpd2000@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees0_Attendees', ``, 'string') }}"
+          ],
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "location": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Location', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -560,
+        1328
+      ],
+      "id": "585ecd80-4e98-483b-988f-012e19e6312f",
+      "name": "Create event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "UpYMdK76SRAFiDWv",
+          "name": "GCalendar account LPD2000"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -432,
+        1328
+      ],
+      "id": "2dff4cbb-abf9-4d0f-a70b-da33f8ee8145",
+      "name": "Send a message in Gmail",
+      "webhookId": "3842dd51-1d96-49fe-ab63-ea1146db6fee",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "vL8AuDCGMLCjnDur",
+          "name": "Gmail LPD2000"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $if($('Telegram In').isExecuted, $('Telegram In').first().json.message.chat.id, 'elevenlabs_' + ($json.body.conversation_id || 'default')) }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -480,
+        352
+      ],
+      "id": "b11ee9ef-1d06-4f8d-afa5-d9da75e68256",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "rXPx9j8n3ZWFPZ95",
+          "name": "PostgreSQL credentials personal_assistant"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Master Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Telegram Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "ai_tool": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Services Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Google Services Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve": {
+      "ai_tool": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload": {
+      "main": [
+        [
+          {
+            "node": "Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insert",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embedding AI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insert",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Retrieve",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram In": {
+      "main": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create event": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Master Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-11-14T18:04:35.766Z",
+  "updatedAt": "2025-11-28T18:57:37.568Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "01255092-afb1-4c3b-9607-9c234e5b83bc",
+  "triggerCount": 3,
+  "id": "2qqm774qE5RpgK03",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": "Y03MeCfY76fI7CHQ",
+  "isArchived": false,
+  "versionCounter": 90,
+  "description": null,
+  "activeVersionId": "01255092-afb1-4c3b-9607-9c234e5b83bc"
+}
