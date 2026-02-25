@@ -1,0 +1,238 @@
+{
+  "name": "Create PDF",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        -448
+      ],
+      "name": "HTTP Response",
+      "id": "2fdf870f-0cf1-44c5-8bc4-8a95af5b8a85"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "user_text",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "name": "filename",
+              "value": "=document_{{ Date.now() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1472,
+        -448
+      ],
+      "name": "Set Variables1",
+      "id": "36893839-3915-4c86-9ed0-956f2e32a6c9"
+    },
+    {
+      "parameters": {
+        "command": "=mkdir -p /tmp/pdf_files && cat > /tmp/pdf_files/{{ $json.filename }}.tex << 'EOF'\n\\documentclass[12pt]{article}\n\\usepackage[utf8]{inputenc}\n\\usepackage[margin=1in]{geometry}\n\\begin{document}\n\\title{Generated Document}\n\\maketitle\n\n{{ $json.user_text }}\n\n\\end{document}\nEOF\necho '{\"filename\": {{ JSON.stringify($json.filename) }}, \"status\": \"file written\"}'"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        -448
+      ],
+      "name": "Write LaTeX File1",
+      "id": "8f745e11-f31c-48f1-9165-61d968672a1c"
+    },
+    {
+      "parameters": {
+        "jsCode": "const stdout = $json.stdout || \"\";\nconst start = stdout.lastIndexOf(\"{\");\nconst end = stdout.lastIndexOf(\"}\");\nif (start === -1 || end === -1 || end < start) {\n  throw new Error(\"No JSON found in stdout:\\n\" + stdout.slice(-200));\n}\nconst jsonString = stdout.slice(start, end + 1);\nreturn [{ json: JSON.parse(jsonString) }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        -448
+      ],
+      "name": "Parse Write Output1",
+      "id": "5e8046bd-071a-42a4-9d8a-e69d61c38f19"
+    },
+    {
+      "parameters": {
+        "command": "=cd /tmp/pdf_files && pdflatex -interaction=nonstopmode -halt-on-error {{ $json.filename }}.tex 2>/dev/null && echo '{\"filename\": {{ JSON.stringify($json.filename) }}, \"status\": \"PDF compiled\", \"pdf_path\": \"/tmp/pdf_files/{{ $json.filename }}.pdf\"}'"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        -448
+      ],
+      "name": "Compile PDF1",
+      "id": "6d843e94-1502-4e0f-9534-8cc12474a84b"
+    },
+    {
+      "parameters": {
+        "jsCode": "const stdout = $json.stdout || \"\";\nconst start = stdout.lastIndexOf(\"{\");\nconst end = stdout.lastIndexOf(\"}\");\nif (start === -1 || end === -1 || end < start) {\n  throw new Error(\"No JSON object found in stdout:\\n\" + stdout.slice(-200));\n}\nconst jsonString = stdout.slice(start, end + 1);\nreturn [{ json: JSON.parse(jsonString) }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        -448
+      ],
+      "name": "Parse Compile Output1",
+      "id": "79f50c51-484f-4546-abed-18dc4f67fbfe"
+    },
+    {
+      "parameters": {
+        "filePath": "={{ $json[\"pdf_path\"] }}"
+      },
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        2592,
+        -448
+      ],
+      "name": "Load PDF as Binary1",
+      "id": "e5d870bc-f14a-47dd-bd10-1eeca78e356b"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        1248,
+        -448
+      ],
+      "id": "97b25842-853b-4df5-842c-8cdef804510f",
+      "name": "When chat message received",
+      "webhookId": "55367cdf-2581-43bc-9570-4ce16e716df0"
+    },
+    {
+      "parameters": {
+        "content": "## I'm a note \n## The workflow was created by Claude. it works. Keep it to include as part of the agents",
+        "height": 192,
+        "width": 576
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1984,
+        -608
+      ],
+      "typeVersion": 1,
+      "id": "4afd58e4-a455-4255-97ad-0b264ef685a0",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Set Variables1": {
+      "main": [
+        [
+          {
+            "node": "Write LaTeX File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write LaTeX File1": {
+      "main": [
+        [
+          {
+            "node": "Parse Write Output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Write Output1": {
+      "main": [
+        [
+          {
+            "node": "Compile PDF1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compile PDF1": {
+      "main": [
+        [
+          {
+            "node": "Parse Compile Output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Compile Output1": {
+      "main": [
+        [
+          {
+            "node": "Load PDF as Binary1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load PDF as Binary1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Set Variables1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-09-15T21:40:05.192Z",
+  "updatedAt": "2025-09-18T17:32:03.503Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "36fc139f-e9ba-491a-8ac0-bd320af6a708",
+  "triggerCount": 0,
+  "id": "kfT3yVLs49S1G6Lm",
+  "meta": null,
+  "parentFolderId": null,
+  "isArchived": false,
+  "versionCounter": 1,
+  "description": null,
+  "activeVersionId": null
+}
