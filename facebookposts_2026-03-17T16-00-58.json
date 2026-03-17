@@ -1,0 +1,788 @@
+{
+  "name": "FaceBook Posts",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "809ee214-220b-4344-a75c-c5b9d9f8021d",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ !!$json.prompt_image }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8b774aa1-5926-4d96-8ed1-655da67872e6",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -1328,
+        1312
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "d5c84381-db43-4375-ba9f-79404a34f520",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.post_supports_client_mutation_id }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "214b53c2-f773-4b65-b037-eb959f6cbdf2",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        128,
+        1536
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "335b0f26-8380-4337-9aa4-9da8472f54ba",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        -304,
+        1536
+      ],
+      "typeVersion": 3.1,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "113732581629527",
+        "edge": "feed",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "message",
+                "value": "={{ $('Format Content').item.json.content }}"
+              },
+              {
+                "name": "attached_media",
+                "value": "={{ $json.id ? `[{\"media_fbid\":\"${$json.id}\"}]` : \"\" }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "c3778aec-0a3e-43da-969e-78bea1275d64",
+      "name": "Facebook Graph API",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        -96,
+        1536
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "113732581629527",
+        "edge": "photos",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "published",
+                "value": "false"
+              }
+            ]
+          }
+        }
+      },
+      "id": "c4ea155e-af91-4870-a3f8-574d9924baf8",
+      "name": "Facebook Upload Img",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        -544,
+        1296
+      ],
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cfb85fb7-2dbd-4122-83bd-9083fb029d25",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json[\"Content\"] ? $json[\"Content\"].length > 0 : (\n    $json[\"message\"]?.text?.length >= 50\n) }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b3bd4d53-f3b1-4368-8680-2144961ad9a1",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -2240,
+        1568
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "functionCode": "const raw =\n  $json[\"Nội dung đầy đủ\"] ||\n  $json.message?.content ||\n  \"\";\n\nconst cleaned = raw.replace(/[#*]+/g, \"\").trim();\n\nreturn [\n  {\n    json: {\n      content: cleaned,\n      platform: \"facebook\",\n    },\n  },\n];"
+      },
+      "id": "ace184d7-478d-433e-a017-a9d75ce9729a",
+      "name": "Format Content",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        -672,
+        1552
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1TBcyVVQ6JVNkvw8qFFbuct_3WxtggOBnI1kwUXMyTY8",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TBcyVVQ6JVNkvw8qFFbuct_3WxtggOBnI1kwUXMyTY8/edit?usp=drivesdk",
+          "cachedResultName": "ai5phut_AutoPost_Demo"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TBcyVVQ6JVNkvw8qFFbuct_3WxtggOBnI1kwUXMyTY8/edit#gid=0",
+          "cachedResultName": "Tự động"
+        },
+        "columns": {
+          "value": {
+            "Ngày": "={{ new Date().toLocaleDateString(\"vi-VN\") }}",
+            "Nội dung ngắn": "={{ $('code2').item.json.content }}",
+            "Nội dung đầy đủ": "={{ $json.text?.trim() ? $json.text : $json.message?.content }}"
+          },
+          "schema": [
+            {
+              "id": "Ngày",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Ngày",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nội dung ngắn",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Nội dung ngắn",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nội dung đầy đủ",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Nội dung đầy đủ",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d91aaa70-f474-4721-8b26-351c2953b141",
+      "name": "save content",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -896,
+        1552
+      ],
+      "retryOnFail": false,
+      "typeVersion": 4.5,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a marketing content writer. Here is the input content. Do 3 things:\n\n1. Quickly analyze the content.\n\n2. Bullet out the main points to write the article (content marketing or social media post).\n\n3. Return the correct format requested, **no further explanation**, **no additional paragraphs other than the following JSON**.\n\nReturn the result in the following format:\n{\n\"prompt_image\": \"...\",\n\"content\": \"...\"\n}\n\n---\n\"prompt_image\": [write a prompt to create an AI image that matches the content, note: absolutely do not put text in the image, only describe the image and appropriate design style]\n\n\"content\": [write complete, clear, concise, and focused content that can be posted on Facebook, website, or blog]\n\nContent to be processed:\n\"\"\n{{\n$json.message?.text?.trim()\n? $json.message.text\n: $json.content?.trim()\n? $json.content\n: $json['Content']?.trim()\n? $json['Content']\n: \"\"\n}}\n\"\"\"",
+        "hasOutputParser": true
+      },
+      "id": "f4ba8f76-a752-46ad-bada-766b022fd17a",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        -2000,
+        1552
+      ],
+      "typeVersion": 1.6,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a social media content writer. Here is a summary of the content that has been analyzed by AI. Let's turn it into **a complete article**, with the following requirements:\n\n1. **Keep the spirit and main message of the content intact.**\n2. Rewrite it into a coherent article, with a clear introduction - body - conclusion.\n3. Use a **friendly, approachable tone**, easy to understand, suitable for posting on Facebook\n4. Use emojis sparingly to increase attraction (if appropriate).\n5. Keep the length moderate (from 200–350 words).\n6. **Do not insert titles or #hashtags**, just focus on the main content.\n\nHere is the summary:\n\"\"\n{{ $json.content }}\n\"\"\""
+      },
+      "id": "96aac54e-05ea-4015-a4a4-736849d27fd6",
+      "name": "Basic LLM Chain1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        -1296,
+        1552
+      ],
+      "typeVersion": 1.6,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const base64Data = $json.data[0].b64_json;\n\nif (!base64Data) {\n  throw new Error(\"Không tìm thấy dữ liệu ảnh base64.\");\n}\n\nreturn [\n  {\n    json: {},\n    binary: {\n      data: {\n        data: base64Data,\n        mimeType: \"image/png\",\n        fileName: \"image.png\"\n      }\n    }\n  }\n];\n"
+      },
+      "id": "5a5b37cd-547b-4586-ab77-57e6bcaa8415",
+      "name": "Convert to File code",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -768,
+        1296
+      ],
+      "retryOnFail": true,
+      "typeVersion": 2,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-001",
+        "options": {}
+      },
+      "id": "a1bfdfb5-d709-4d38-9824-531a108dc437",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        -2000,
+        1760
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-001",
+        "options": {}
+      },
+      "id": "f3ea64e0-ac0e-4418-85e5-f10c18d2b23e",
+      "name": "Google Gemini Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        -1296,
+        1744
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "let rawText = $json.text || '';\n\n// Bước 1: Tách phần JSON bên trong ```json ... ```\nconst matched = rawText.match(/```json\\s*([\\s\\S]*?)\\s*```/);\n\nif (!matched || !matched[1]) {\n  return [{ json: { prompt_image: '', content: '', error: 'Can not find JSON in ```json```' } }];\n}\n\nlet jsonString = matched[1]\n  .replace(/\\n/g, '')      // Xoá xuống dòng\n  .replace(/\\r/g, '')      // Xoá carriage return\n  .replace(/\\t/g, '')      // Xoá tab (nếu có)\n  .trim();\n\ntry {\n  const parsed = JSON.parse(jsonString);\n  return [{\n    json: {\n      prompt_image: parsed.prompt_image || '',\n      content: parsed.content || ''\n    }\n  }];\n} catch (err) {\n  return [{\n    json: {\n      prompt_image: '',\n      content: '',\n      error: 'error parse JSON: ' + err.message\n    }\n  }];\n}"
+      },
+      "id": "9e08db10-2945-422e-9151-37dffa4fa246",
+      "name": "code2",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1616,
+        1552
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://router.huggingface.co/together/v1/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer <key>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"response_format\": \"b64_json\",\n  \"prompt\": \"{{ $json.prompt_image }}\",\n  \"model\": \"black-forest-labs/FLUX.1-schnell\"\n}\n",
+        "options": {}
+      },
+      "id": "703a7a02-8298-4771-a592-75a9d76804d6",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -1072,
+        1296
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "formTitle": "Input the post idea",
+        "formDescription": "Input the idea that you want upload to Facebook,",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Input Information here",
+              "fieldType": "textarea",
+              "placeholder": "At least 50 words",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Gửi thông tin",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Information sent"
+            }
+          }
+        }
+      },
+      "id": "b6d509a1-7625-40f5-8ad9-69296994252b",
+      "name": "On form submission1",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        -2848,
+        1568
+      ],
+      "webhookId": "56de23ed-39d7-4865-9a3d-245186b0616d",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1icCYSzDhpAc4itXrfwxhjQgisKye-mtdR8UwyZfS1m8",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1icCYSzDhpAc4itXrfwxhjQgisKye-mtdR8UwyZfS1m8/edit?usp=drivesdk",
+          "cachedResultName": "Content"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1icCYSzDhpAc4itXrfwxhjQgisKye-mtdR8UwyZfS1m8/edit#gid=0",
+          "cachedResultName": "Post via form"
+        },
+        "columns": {
+          "value": {
+            "Date": "={{ $now.toFormat(\"dd/MM/yyyy\") }}",
+            "Time": "={{ $now.toFormat(\"HH\") }}",
+            "Content": "={{ $json[\"Input Information here\"] }}"
+          },
+          "schema": [
+            {
+              "id": "Date",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Time",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Time",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Content",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Content",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "745271f9-08d0-4059-b2ed-8b02fb25ff56",
+      "name": "Append row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -2544,
+        1568
+      ],
+      "typeVersion": 4.5,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "sendTo": "user@example.com",
+        "subject": "✅ The draft version is uploaded",
+        "message": "=✅ The post will be published after 2 minutes!\n📄 Review in: https://facebook.com/{{ $json.id.split('_')[0] }}/posts/{{ $json.id.split('_')[1] }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "50c8d67d-1137-481b-9a4a-5f729905fd1e",
+      "name": "Send a message",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        352,
+        1520
+      ],
+      "webhookId": "7f9e790e-fb8d-485a-9c8c-8d592c4cd138",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "content": "# Complete Setup Guide: AI Facebook Post Generator\n\n## Prerequisites Checklist\n\nBefore starting, ensure you have:\n- [ ] n8n instance (cloud or self-hosted)\n- [ ] Facebook Business Page (not personal profile)\n- [ ] Google account with access to Sheets and Gmail\n- [ ] Basic understanding of API credentials\n\n**Estimated Setup Time**: 30-45 minutes\n\n---\n\n## Step 1: Facebook Integration Setup\n\n### 1.1 Create Facebook App\n1. Go to [Facebook Developers](https://developers.facebook.com/)\n2. Click **\"My Apps\"** → **\"Create App\"**\n3. Choose **\"Business\"** as app type\n4. Enter app name: `n8n-facebook-poster` (or your preferred name)\n5. Click **\"Create App\"**\n\n### 1.2 Configure Facebook App\n1. In your app dashboard, go to **\"Add a Product\"**\n2. Find **\"Facebook Login\"** and click **\"Set Up\"**\n3. Go to **Settings** → **Basic**\n4. Add your domain to **\"App Domains\"** (for n8n cloud: `app.n8n.cloud`)\n5. Save changes\n\n### 1.3 Get Page Access Token\n1. Go to **Tools** → **Graph API Explorer**\n2. Select your app from the dropdown\n3. Click **\"Generate Access Token\"**\n4. Grant permissions: `pages_manage_posts`, `pages_read_engagement`, `pages_show_list`\n5. Select your Facebook page\n6. Copy the **Page Access Token** (starts with `EAAG...`)\n7. **Important**: Extend token to long-lived:\n   - Use Graph API Explorer\n   - Make GET request to: `/oauth/access_token?grant_type=fb_exchange_token&client_id=YOUR_APP_ID&client_secret=YOUR_APP_SECRET&fb_exchange_token=YOUR_SHORT_TOKEN`\n\n### 1.4 Get Your Page ID\n1. Go to your Facebook page\n2. Click **\"About\"** tab\n3. Scroll down to find **\"Page ID\"** or\n4. Use Graph API Explorer: GET request to `/me/accounts` with your token\n\n---",
+        "height": 1264,
+        "width": 672
+      },
+      "id": "fe3df394-8f5d-48b8-93a7-9c32a7bbd4c2",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3664,
+        512
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "\n## Step 2: Google Services Setup\n\n### 2.1 Enable Google APIs\n1. Go to [Google Cloud Console](https://console.cloud.google.com/)\n2. Create new project or select existing one\n3. Go to **\"APIs & Services\"** → **\"Library\"**\n4. Enable these APIs:\n   - Google Sheets API\n   - Gmail API\n   - Google Drive API (optional)\n\n### 2.2 Create Service Account\n1. Go to **\"APIs & Services\"** → **\"Credentials\"**\n2. Click **\"Create Credentials\"** → **\"Service Account\"**\n3. Name: `n8n-facebook-automation`\n4. Click **\"Create and Continue\"**\n5. Skip role assignment (click **\"Continue\"**)\n6. Click **\"Done\"**\n\n### 2.3 Generate Service Account Key\n1. Click on your service account email\n2. Go to **\"Keys\"** tab\n3. Click **\"Add Key\"** → **\"Create New Key\"**\n4. Choose **\"JSON\"** format\n5. Download the JSON file (save securely)\n\n### 2.4 Prepare Google Sheets\n1. Create two Google Sheets:\n   - **Content Log Sheet**: For tracking generated content\n   - **Input Tracking Sheet**: For logging form submissions\n\n2. **Content Log Sheet Structure**:\n   - Column A: (Date)\n   - Column B: (Short Content)\n   - Column C: (Full Content)\n\n3. **Input Tracking Sheet Structure**:\n   - Column A: \"Date\"\n   - Column B: \"Time\"\n   - Column C: \"Content\"\n\n4. Share both sheets with your service account email (found in the JSON file)\n\n---\n",
+        "height": 1040,
+        "width": 656,
+        "color": 3
+      },
+      "id": "2ee97825-442b-4620-bec9-fccf58204e2f",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2688,
+        416
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "\n## Step 3: AI Services Setup\n\n### Get Gemini API Key\n1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)\n2. Sign in with your Google account\n3. Click **\"Create API Key\"**\n4. Copy the API key (starts with `AIza...`)\n---\n\n## Step 4: n8n Configuration\n\n### 4.1 Import the Workflow\n1. Copy the workflow JSON from the template\n2. In n8n, click **\"Import from JSON\"**\n3. Paste the workflow JSON\n4. Click **\"Import\"**\n\n### 4.2 Configure Credentials\n\n#### Facebook Graph API Credentials\n1. Go to **Settings** → **Credentials**\n2. Click **\"Add Credential\"**\n3. Search for **\"Facebook Graph API\"**\n4. Enter:\n   - **Access Token**: Your Page Access Token from Step 1.3\n5. Test the connection\n6. Save as: `Facebook Page Access`\n\n#### Google Credentials  \n1. Add **\"Google Service Account\"** credential\n2. Upload the JSON file from Step 2.3\n3. Test connection\n4. Save as: `Google Services`\n\n#### Gemini API Credentials\n1. Add **\"Google PaLM API\"** credential\n2. Enter your Gemini API key from Step 3.1\n3. Save as: `Gemini AI`\n\n### 4.3 Update Node Configurations\n\n#### Update Facebook Page ID\n1. Open **\"Facebook Graph API\"** node\n2. Replace `\"113732581629527\"` with your actual Page ID from Step 1.4\n3. Do the same for **\"Facebook Upload Img\"** node\n\n#### Update Google Sheets IDs\n1. Open **\"save content\"** node\n2. Replace the Document ID with your Content Log Sheet ID\n3. Open **\"Append row in sheet\"** node  \n4. Replace the Document ID with your Input Tracking Sheet ID\n\n**To find Sheet ID**: Look at the URL - it's the long string after `/spreadsheets/d/`\n\n#### Update Email Address\n1. Open **\"Send a message\"** node\n2. Replace `xxx@gmail.com` with your email\n3. Configure Gmail credentials if not already done\n\n---\n",
+        "height": 1440,
+        "width": 928,
+        "color": 4
+      },
+      "id": "d3132d87-0e76-4d84-b920-4ee50ee1a62a",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "\n## Step 5: Testing & Validation\n\n### 5.1 Test Individual Components\n\n#### Test Google Sheets Connection\n1. Right-click **\"Append row in sheet\"** node\n2. Click **\"Execute Node\"**\n3. Check if a test row appears in your sheet\n\n#### Test Gemini AI\n1. Right-click **\"Basic LLM Chain\"** node\n2. Add test data in **\"Edit Input Data\"**\n3. Execute and verify AI response\n\n#### Test Image Generation\n1. Right-click **\"HTTP Request\"** node\n2. Ensure it has a valid prompt from previous step\n3. Execute and check for base64 image data\n\n#### Test Facebook Upload\n1. Run the full workflow with test content\n2. Check your Facebook page for the post\n3. Verify image uploaded correctly\n\n### 5.2 End-to-End Test\n1. Click **\"Execute Workflow\"** on the trigger node\n2. Submit test content through the form\n3. Monitor each node's execution\n4. Verify final Facebook post",
+        "height": 736,
+        "width": 464,
+        "color": 6
+      },
+      "id": "e84cc1e2-1310-495b-935f-6f46e83c41e9",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -224,
+        1776
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "code2": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Convert to File code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save content": {
+      "main": [
+        [
+          {
+            "node": "Format Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Content": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "save content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Graph API": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Upload Img": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File code": {
+      "main": [
+        [
+          {
+            "node": "Facebook Upload Img",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-03-17T01:00:34.485Z",
+  "updatedAt": "2026-03-17T01:00:37.966Z",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "80414b7a-46c4-4778-9448-3dfb61a1baf8",
+  "triggerCount": 0,
+  "id": "cSVER95hwVj1gmUC",
+  "meta": null,
+  "parentFolderId": null,
+  "isArchived": false,
+  "versionCounter": 2,
+  "description": null,
+  "activeVersionId": null
+}
