@@ -1,0 +1,216 @@
+{
+  "name": "CNWCWhatsapp",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -192
+      ],
+      "id": "0107e3f6-7ea6-4759-86ad-f778ed873ab2",
+      "name": "WhatsApp Trigger",
+      "webhookId": "4e67b215-b7af-4720-b38f-912b0f275204",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "bkFwxzEPiowUqxeD",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        208
+      ],
+      "id": "6f74360b-dc49-4733-bd42-82bb4581c14a",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are \"Ask Shaun\", a helpful assistant for Code Ninjas team members.\n\nIMPORTANT: When team members ask about Code Ninjas operations (points, quests, rewards, ninjas, sensei procedures, training, or any company-specific information), you MUST use the knowledgebase tool to search for the answer. The request is {{ $json.messages[0].text.body }}\n\nGuidelines:\n- Always search the knowledgebase first for operational questions\n- Be polite, friendly, and concise\n- For casual greetings or chat, respond naturally\n- Base your answers on what you find in the knowledgebase\n\nUse the knowledgebase tool for ANY question about Code Ninjas operations or training.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -208
+      ],
+      "id": "93ad5231-98aa-4287-9bd4-c627ccf61e50",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        16
+      ],
+      "id": "71230bb7-07eb-43a8-be85-e49fd9e6a9e4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "T6jALHM6FIHsU7i3",
+          "name": "OpenAi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "802628052938510",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        -208
+      ],
+      "id": "704fc4cf-454e-4f5e-9eea-0f27a9b6b85e",
+      "name": "Send message",
+      "webhookId": "cce0b3d2-2b2d-4f38-b2f3-83edc31dcb8f",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "dAU4VMpqLc73dPyl",
+          "name": "CNWC WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search the Code Ninjas training documentation to find specific information about points, rewards, quests, adventures, sensei procedures, and ninja training guidelines. Use this for any questions about Code Ninjas operations.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 20,
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1280,
+        48
+      ],
+      "id": "92635f31-a220-488c-b65d-c8e1c8225484",
+      "name": "knowledgebase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "CAInvpDfX1zgx2Wv",
+          "name": "Supabase CNWC"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "knowledgebase",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "knowledgebase": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-10-03T23:09:09.270Z",
+  "updatedAt": "2025-11-05T22:40:40.861Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "f1ce069b-53cf-43d7-a441-37d898f5b090",
+  "triggerCount": 1,
+  "id": "CfH5bG9Nw0CdcJrq",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "parentFolderId": "Tj9st8nLcUxlvAXe",
+  "isArchived": false,
+  "versionCounter": 2,
+  "description": null,
+  "activeVersionId": null
+}
